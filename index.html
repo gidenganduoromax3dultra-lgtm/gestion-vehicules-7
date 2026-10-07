@@ -1,0 +1,1789 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gestion Véhicules">
+<meta name="theme-color" content="#0f172a">
+<title>Gestion de Véhicules — IR GIDE PROMAX</title>
+
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0f172a; --panel:#1e293b; --panel-2:#273449; --border:#334155;
+  --ink:#f1f5f9; --ink-dim:#94a3b8; --ink-faint:#64748b;
+  --primary:#3b82f6; --primary-2:#6366f1; --success:#10b981; --warn:#f59e0b;
+  --danger:#ef4444; --info:#06b6d4; --purple:#8b5cf6;
+  --radius:10px;
+}
+html,body{overscroll-behavior:none}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  background:var(--bg); color:var(--ink); min-height:100vh; padding-bottom:80px;
+  font-size:14px; line-height:1.5;
+}
+.app{display:flex;min-height:100vh;flex-direction:column}
+
+/* BANDEAU INSTALLATION */
+.install-banner{
+  display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,#10b981,#059669);color:#fff;
+  padding:14px 20px;border-radius:12px;box-shadow:0 10px 40px rgba(16,185,129,.5);
+  z-index:3000;max-width:92vw;align-items:center;gap:12px;
+  font-weight:700;font-size:14px;cursor:pointer;
+  animation:slideUp .4s ease;
+}
+.install-banner.visible{display:flex}
+.install-banner:hover{transform:translateX(-50%) translateY(-2px)}
+@keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(30px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.install-banner .ib-icon{font-size:22px}
+.install-banner .ib-close{
+  background:rgba(255,255,255,.2);border:none;color:#fff;
+  width:24px;height:24px;border-radius:50%;cursor:pointer;
+  font-size:14px;font-weight:700;display:grid;place-items:center;
+}
+
+/* ÉCRAN DE CONNEXION */
+#login-screen{
+  position:fixed;inset:0;z-index:5000;
+  background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#0f172a 100%);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+}
+#login-screen.hidden{display:none}
+.login-card{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:16px;padding:32px 28px;width:100%;max-width:400px;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+}
+.login-logo{
+  width:70px;height:70px;border-radius:18px;display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--primary),var(--primary-2));
+  font-size:36px;margin:0 auto 20px;
+  box-shadow:0 8px 24px rgba(59,130,246,.4);
+}
+.login-title{font-size:22px;font-weight:800;text-align:center;letter-spacing:-.3px;margin-bottom:6px}
+.login-subtitle{font-size:12px;color:var(--ink-dim);text-align:center;margin-bottom:28px}
+.login-field{margin-bottom:16px}
+.login-field label{display:block;font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.06em;color:var(--ink-dim);margin-bottom:6px}
+.login-field input{
+  width:100%;padding:14px 16px;border-radius:10px;border:1px solid var(--border);
+  background:var(--panel-2);color:var(--ink);font-size:16px;font-family:inherit;
+  outline:none;transition:.15s;
+}
+.login-field input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(59,130,246,.2)}
+.login-field input.pin{
+  text-align:center;letter-spacing:1.2em;font-size:24px;font-weight:700;
+  padding-left:calc(1.2em + 16px);
+}
+.login-btn{
+  width:100%;padding:14px;border:none;border-radius:10px;cursor:pointer;
+  background:linear-gradient(135deg,var(--primary),var(--primary-2));
+  color:#fff;font-size:15px;font-weight:700;font-family:inherit;
+  box-shadow:0 6px 20px rgba(59,130,246,.4);transition:.15s;
+  margin-top:8px;
+}
+.login-btn:hover{transform:translateY(-1px)}
+.login-btn:active{transform:scale(.98)}
+.login-error{
+  background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);
+  color:#fca5a5;padding:10px 14px;border-radius:8px;font-size:12px;
+  font-weight:600;text-align:center;margin-bottom:16px;display:none;
+}
+.login-error.visible{display:block}
+.login-info{
+  font-size:11px;color:var(--ink-faint);text-align:center;
+  margin-top:20px;line-height:1.6;
+}
+.login-footer{
+  text-align:center;font-size:11px;color:var(--ink-faint);
+  margin-top:24px;padding-top:16px;border-top:1px solid var(--border);
+}
+.login-footer strong{color:var(--primary);font-weight:800;letter-spacing:.15em}
+
+.app-header{
+  background:linear-gradient(135deg,#1e293b,#0f172a);
+  border-bottom:1px solid var(--border); padding:12px 16px;
+  display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 12px rgba(0,0,0,.3);
+}
+.app-logo{
+  width:42px;height:42px;border-radius:10px;display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--primary),var(--primary-2));
+  font-size:22px;flex-shrink:0;
+}
+.app-title{font-size:15px;font-weight:700;letter-spacing:-.2px;line-height:1.2}
+.app-subtitle{font-size:11px;color:var(--ink-dim);margin-top:1px}
+.header-right{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.badge-alerts{
+  background:var(--danger);color:#fff;padding:4px 10px;border-radius:20px;
+  font-size:11px;font-weight:700;cursor:pointer;display:none;
+}
+.badge-alerts.visible{display:inline-block}
+.badge-alerts.pulsing{animation:alertPulse 1.2s infinite}
+@keyframes alertPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15);box-shadow:0 0 20px rgba(239,68,68,.8)}}
+.header-btn{
+  background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--ink);
+  padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;
+  font-family:inherit;transition:.15s;white-space:nowrap;
+}
+.header-btn:hover{background:rgba(255,255,255,.12)}
+.header-btn.install{background:linear-gradient(135deg,#10b981,#059669)!important;border-color:#10b981!important;color:#fff!important}
+.header-btn.install:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(16,185,129,.5)}
+.menu-toggle{display:none}
+
+.layout{display:flex;flex:1;min-height:0}
+.sidebar{
+  width:240px;background:var(--panel);border-right:1px solid var(--border);
+  padding:12px 0;overflow-y:auto;flex-shrink:0;
+  max-height:calc(100vh - 67px);position:sticky;top:67px;
+}
+.nav-section{padding:8px 16px 4px;font-size:10px;text-transform:uppercase;
+  letter-spacing:.12em;color:var(--ink-faint);font-weight:700}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;
+  font-size:13px;color:var(--ink-dim);border-left:3px solid transparent;
+  transition:.15s;user-select:none;
+}
+.nav-item:hover{background:var(--panel-2);color:var(--ink)}
+.nav-item.active{background:rgba(59,130,246,.1);color:var(--primary);
+  border-left-color:var(--primary);font-weight:600}
+.nav-item .nav-icon{font-size:16px;width:20px;text-align:center}
+.nav-item .nav-badge{margin-left:auto;background:var(--danger);color:#fff;
+  font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700}
+.main{flex:1;padding:20px;min-width:0;max-width:100%}
+.page{display:none}
+.page.active{display:block}
+.page-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.page-title{font-size:22px;font-weight:700;letter-spacing:-.3px}
+.page-subtitle{font-size:12px;color:var(--ink-dim);margin-top:2px}
+.page-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:9px 16px;border-radius:8px;border:none;cursor:pointer;
+  font-family:inherit;font-size:13px;font-weight:600;transition:.15s;
+  text-decoration:none;
+}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;
+  box-shadow:0 4px 12px rgba(59,130,246,.3)}
+.btn-primary:hover{transform:translateY(-1px)}
+.btn-secondary{background:var(--panel-2);color:var(--ink);border:1px solid var(--border)}
+.btn-secondary:hover{background:var(--border)}
+.btn-danger{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.4)}
+.btn-success{background:rgba(16,185,129,.15);color:#6ee7b7;border:1px solid rgba(16,185,129,.4)}
+.btn-sm{padding:6px 11px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.cards-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:12px;margin-bottom:20px;
+}
+.stat-card{
+  background:linear-gradient(135deg,var(--panel),var(--panel-2));
+  border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 16px;position:relative;overflow:hidden;
+}
+.stat-card::before{
+  content:'';position:absolute;top:0;left:0;width:3px;height:100%;
+  background:var(--primary);
+}
+.stat-card.success::before{background:var(--success)}
+.stat-card.warn::before{background:var(--warn)}
+.stat-card.danger::before{background:var(--danger)}
+.stat-card.info::before{background:var(--info)}
+.stat-card.purple::before{background:var(--purple)}
+.stat-label{font-size:11px;color:var(--ink-dim);text-transform:uppercase;
+  letter-spacing:.08em;font-weight:700;margin-bottom:6px}
+.stat-value{font-size:26px;font-weight:800;letter-spacing:-.5px;line-height:1.1}
+.stat-sub{font-size:11px;color:var(--ink-faint);margin-top:4px}
+.section-card{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px;margin-bottom:16px;
+}
+.section-card h3{font-size:14px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--ink-dim);margin-bottom:14px;font-weight:700}
+
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;
+  border-radius:var(--radius);border:1px solid var(--border);background:var(--panel)}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:600px}
+thead th{
+  background:var(--panel-2);padding:11px 12px;text-align:left;font-size:11px;
+  text-transform:uppercase;letter-spacing:.06em;color:var(--ink-dim);
+  font-weight:700;border-bottom:1px solid var(--border);white-space:nowrap;
+}
+tbody td{padding:11px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+tbody tr:hover{background:rgba(59,130,246,.05)}
+tbody tr:last-child td{border-bottom:none}
+.table-empty{padding:40px;text-align:center;color:var(--ink-faint);font-style:italic}
+
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.form-field{display:flex;flex-direction:column;gap:5px}
+.form-field label{font-size:11px;color:var(--ink-dim);font-weight:700;
+  text-transform:uppercase;letter-spacing:.05em}
+.form-field input,.form-field select,.form-field textarea{
+  width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);
+  background:var(--panel-2);color:var(--ink);font-size:13px;
+  font-family:inherit;outline:none;transition:.15s;
+  -webkit-appearance:none;appearance:none;
+}
+.form-field input:focus,.form-field select:focus,.form-field textarea:focus{
+  border-color:var(--primary);box-shadow:0 0 0 3px rgba(59,130,246,.15)
+}
+.form-field textarea{resize:vertical;min-height:70px}
+.form-field.full{grid-column:1/-1}
+
+.filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.filters input,.filters select{
+  padding:8px 12px;border-radius:8px;border:1px solid var(--border);
+  background:var(--panel);color:var(--ink);font-size:12px;font-family:inherit;
+  outline:none;min-width:130px;
+}
+.filters input[type=text]{flex:1;max-width:340px}
+
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);
+  z-index:1000;display:none;align-items:center;justify-content:center;padding:16px;
+}
+.modal-overlay.visible{display:flex}
+.modal{
+  background:var(--panel);border-radius:12px;width:100%;max-width:720px;
+  max-height:90vh;overflow-y:auto;border:1px solid var(--border);
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+}
+.modal-header{
+  padding:16px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;
+  background:var(--panel);z-index:2;border-radius:12px 12px 0 0;
+}
+.modal-title{font-size:16px;font-weight:700}
+.modal-close{
+  background:transparent;border:none;color:var(--ink-dim);font-size:22px;
+  cursor:pointer;width:30px;height:30px;border-radius:6px;display:grid;place-items:center;
+}
+.modal-body{padding:20px}
+.modal-footer{
+  padding:14px 20px;border-top:1px solid var(--border);display:flex;
+  gap:10px;justify-content:flex-end;flex-wrap:wrap;
+  background:var(--panel);border-radius:0 0 12px 12px;position:sticky;bottom:0;
+}
+
+.toast{
+  position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-120px);
+  background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--primary);
+  padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;
+  box-shadow:0 10px 40px rgba(0,0,0,.5);z-index:2000;opacity:0;
+  transition:.35s cubic-bezier(.2,.9,.3,1.2);max-width:90vw;
+}
+.toast.visible{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.success{border-left-color:var(--success)}
+.toast.error{border-left-color:var(--danger)}
+.toast.warn{border-left-color:var(--warn)}
+
+.alarm-overlay{
+  position:fixed;inset:0;background:rgba(127,29,29,.95);backdrop-filter:blur(6px);
+  z-index:4000;display:none;align-items:center;justify-content:center;padding:20px;
+}
+.alarm-overlay.visible{display:flex}
+.alarm-card{
+  background:#fff;border-radius:20px;padding:36px 28px;max-width:500px;width:100%;
+  text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.7);
+}
+.alarm-icon{font-size:80px;margin-bottom:16px;display:block}
+.alarm-title{font-size:26px;font-weight:900;color:#b91c1c;margin-bottom:12px}
+.alarm-message{font-size:15px;color:#1f2937;line-height:1.6;margin-bottom:24px;font-weight:600}
+.alarm-list{background:#fef2f2;border-radius:12px;padding:16px;text-align:left;margin-bottom:24px;max-height:220px;overflow-y:auto}
+.alarm-list-item{padding:10px 12px;border-left:3px solid #ef4444;margin-bottom:8px;background:#fff;border-radius:0 8px 8px 0;font-size:13px;color:#1f2937}
+.alarm-list-item strong{color:#b91c1c;display:block;font-size:12px;margin-bottom:2px}
+.alarm-btn{padding:14px 32px;border:none;border-radius:12px;background:#b91c1c;color:#fff;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit}
+
+.alert-item{
+  display:flex;gap:12px;align-items:flex-start;padding:12px;
+  border-radius:8px;margin-bottom:8px;border-left:4px solid var(--info);
+  background:rgba(6,182,212,.08);
+}
+.alert-item.warn{background:rgba(245,158,11,.08);border-left-color:var(--warn)}
+.alert-item.danger{background:rgba(239,68,68,.08);border-left-color:var(--danger)}
+.alert-icon{font-size:20px;flex-shrink:0}
+.alert-content{flex:1;min-width:0}
+.alert-title{font-weight:700;font-size:13px;margin-bottom:2px}
+.alert-desc{font-size:12px;color:var(--ink-dim)}
+
+.tag{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.tag-primary{background:rgba(59,130,246,.15);color:#93c5fd}
+.tag-success{background:rgba(16,185,129,.15);color:#6ee7b7}
+.tag-warn{background:rgba(245,158,11,.15);color:#fcd34d}
+.tag-danger{background:rgba(239,68,68,.15);color:#fca5a5}
+.tag-info{background:rgba(6,182,212,.15);color:#67e8f9}
+.tag-purple{background:rgba(139,92,246,.15);color:#c4b5fd}
+
+.app-footer{
+  background:var(--panel);border-top:1px solid var(--border);
+  padding:14px 16px;text-align:center;font-size:12px;color:var(--ink-dim);
+  margin-top:auto;
+}
+.app-footer strong{color:var(--primary);font-weight:800;letter-spacing:.15em;font-size:13px}
+
+@media (max-width:900px){
+  .sidebar{position:fixed;top:67px;left:-260px;bottom:0;z-index:99;
+    transition:left .3s ease;max-height:none;width:260px;}
+  .sidebar.open{left:0;box-shadow:4px 0 20px rgba(0,0,0,.5)}
+  .menu-toggle{display:inline-flex}
+  .main{padding:14px}
+  .page-title{font-size:18px}
+  .stat-value{font-size:22px}
+}
+@media (max-width:480px){
+  .cards-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+  .form-grid{grid-template-columns:1fr}
+  .login-card{padding:24px 20px}
+}
+
+.hidden{display:none !important}
+.text-right{text-align:right}
+.mt-10{margin-top:10px}
+.empty-state{text-align:center;padding:60px 20px;color:var(--ink-faint)}
+.empty-state .big{font-size:56px;opacity:.4;margin-bottom:12px}
+.empty-state .label{font-size:14px;margin-bottom:16px}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+</style>
+</head>
+<body>
+
+<!-- BANDEAU D'INSTALLATION -->
+<div class="install-banner" id="install-banner">
+  <span class="ib-icon">📲</span>
+  <span>Installer l'application</span>
+  <button class="ib-close" onclick="document.getElementById('install-banner').classList.remove('visible')">×</button>
+</div>
+
+<!-- ÉCRAN DE CONNEXION -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">🚗</div>
+    <div class="login-title">Gestion de Véhicules</div>
+    <div class="login-subtitle">Système professionnel de gestion de flotte</div>
+    <div class="login-error" id="login-error">❌ Identifiants incorrects</div>
+    <div class="login-field">
+      <label>📱 Numéro de téléphone</label>
+      <input type="tel" id="login-phone" placeholder="Ex: 0612345678" autocomplete="tel" inputmode="tel">
+    </div>
+    <div class="login-field">
+      <label>🔒 Code (4 chiffres)</label>
+      <input type="tel" id="login-pin" class="pin" placeholder="••••" maxlength="4" inputmode="numeric" autocomplete="off">
+    </div>
+    <button class="login-btn" id="login-btn">Se connecter →</button>
+    <div class="login-info" id="login-info">
+      💡 Première utilisation : entrez votre numéro et un code à 4 chiffres. Ce code sera votre accès permanent.
+    </div>
+    <div class="login-footer"><strong>IR GIDE PROMAX</strong></div>
+  </div>
+</div>
+
+<!-- APPLICATION -->
+<div class="app">
+  <header class="app-header">
+    <button class="header-btn menu-toggle" id="menu-toggle">☰</button>
+    <div class="app-logo">🚗</div>
+    <div>
+      <div class="app-title">GESTION DE VÉHICULES</div>
+      <div class="app-subtitle">Système professionnel de gestion de flotte</div>
+    </div>
+    <div class="header-right">
+      <span class="badge-alerts" id="alerts-badge" onclick="navigate('alerts')">🔔 0</span>
+      <button class="header-btn install" id="btn-install" style="display:none">📲 INSTALLER</button>
+      <button class="header-btn" id="btn-demo" title="Données de démo">⚡ DÉMO</button>
+      <button class="header-btn" id="btn-logout" title="Déconnexion">🚪</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar" id="sidebar">
+      <div class="nav-section">Principal</div>
+      <div class="nav-item active" data-page="dashboard"><span class="nav-icon">🏠</span>Tableau de bord</div>
+      <div class="nav-section">Véhicules</div>
+      <div class="nav-item" data-page="vehicles"><span class="nav-icon">🚗</span>Tous les véhicules</div>
+      <div class="nav-item" data-page="vehicles-personal"><span class="nav-icon">🚙</span>Personnels</div>
+      <div class="nav-item" data-page="vehicles-transport"><span class="nav-icon">🚕</span>Transport</div>
+      <div class="nav-item" data-page="vehicles-other"><span class="nav-icon">🚐</span>Autres</div>
+      <div class="nav-item" data-page="categories"><span class="nav-icon">📁</span>Catégories</div>
+      <div class="nav-section">Exploitation</div>
+      <div class="nav-item" data-page="drivers"><span class="nav-icon">👨‍✈️</span>Chauffeurs</div>
+      <div class="nav-item" data-page="missions"><span class="nav-icon">🛣️</span>Missions</div>
+      <div class="nav-item" data-page="fuel"><span class="nav-icon">⛽</span>Carburant</div>
+      <div class="nav-item" data-page="maintenance"><span class="nav-icon">🔧</span>Entretiens</div>
+      <div class="nav-section">Finances</div>
+      <div class="nav-item" data-page="expenses"><span class="nav-icon">💰</span>Dépenses</div>
+      <div class="nav-item" data-page="revenues"><span class="nav-icon">💵</span>Recettes</div>
+      <div class="nav-item" data-page="salaries"><span class="nav-icon">💳</span>Salaires</div>
+      <div class="nav-item" data-page="profitability"><span class="nav-icon">📈</span>Rentabilité</div>
+      <div class="nav-section">Administration</div>
+      <div class="nav-item" data-page="documents"><span class="nav-icon">📄</span>Documents</div>
+      <div class="nav-item" data-page="incidents"><span class="nav-icon">🚨</span>Incidents</div>
+      <div class="nav-item" data-page="alerts"><span class="nav-icon">🔔</span>Alertes <span class="nav-badge" id="nav-alerts-count" style="display:none">0</span></div>
+      <div class="nav-item" data-page="reports"><span class="nav-icon">📊</span>Rapports</div>
+    </nav>
+    <main class="main" id="main"></main>
+  </div>
+
+  <footer class="app-footer">
+    <strong>IR GIDE PROMAX</strong> · © <span id="footer-year"></span> · Tous droits réservés
+  </footer>
+</div>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Titre</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<div class="alarm-overlay" id="alarm-overlay">
+  <div class="alarm-card">
+    <span class="alarm-icon">🚨</span>
+    <div class="alarm-title">ALERTE URGENTE</div>
+    <div class="alarm-message">Des alertes critiques nécessitent votre attention immédiate :</div>
+    <div class="alarm-list" id="alarm-list"></div>
+    <button class="alarm-btn" onclick="dismissAlarm()">✓ J'AI COMPRIS</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   GESTION DE VÉHICULES — IR GIDE PROMAX
+   ═══════════════════════════════════════════════════════════════════ */
+
+const DB_NAME = 'GestionVehiculesDB';
+const DB_VERSION = 1;
+const STORES = ['vehicles','categories','owners','drivers','missions','fuel','maintenance','expenses','revenues','salaries','documents','incidents','notifications','history','gps_positions','users'];
+
+let db = null;
+let currentUser = null;
+let deferredPrompt = null;
+
+/* ═══ BASE DE DONNÉES ═══ */
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => { db = req.result; resolve(db); };
+    req.onupgradeneeded = (e) => {
+      const d = e.target.result;
+      STORES.forEach(name => {
+        if (!d.objectStoreNames.contains(name)) {
+          const store = d.createObjectStore(name, { keyPath: 'id', autoIncrement: true });
+          ['categoryId','ownerId','driverId','vehicleId','missionId','date','expiryDate','status','type','level','phone'].forEach(idx => {
+            try { store.createIndex(idx, idx, { unique: false }); } catch(err) {}
+          });
+        }
+      });
+    };
+  });
+}
+function dbAdd(s, o) { return new Promise((res, rej) => { const tx = db.transaction(s,'readwrite'); const r = tx.objectStore(s).add(o); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+function dbPut(s, o) { return new Promise((res, rej) => { const tx = db.transaction(s,'readwrite'); const r = tx.objectStore(s).put(o); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+function dbGet(s, id) { return new Promise((res, rej) => { const tx = db.transaction(s,'readonly'); const r = tx.objectStore(s).get(id); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+function dbGetAll(s) { return new Promise((res, rej) => { const tx = db.transaction(s,'readonly'); const r = tx.objectStore(s).getAll(); r.onsuccess = () => res(r.result || []); r.onerror = () => rej(r.error); }); }
+function dbDelete(s, id) { return new Promise((res, rej) => { const tx = db.transaction(s,'readwrite'); const r = tx.objectStore(s).delete(id); r.onsuccess = () => res(); r.onerror = () => rej(r.error); }); }
+function dbClear(s) { return new Promise((res, rej) => { const tx = db.transaction(s,'readwrite'); const r = tx.objectStore(s).clear(); r.onsuccess = () => res(); r.onerror = () => rej(r.error); }); }
+
+/* ═══ UTILITAIRES ═══ */
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtMoney(n) { if (n == null || isNaN(n)) return '0'; return Number(n).toLocaleString('fr-FR'); }
+function fmtDate(d) { if (!d) return '—'; try { return new Date(d).toLocaleDateString('fr-FR'); } catch(e){ return '—'; } }
+function fmtDateInput(d) { if (!d) return ''; return new Date(d).toISOString().split('T')[0]; }
+function today() { return new Date().toISOString().split('T')[0]; }
+function daysUntil(d) { if (!d) return null; const n = new Date(); n.setHours(0,0,0,0); const t = new Date(d); t.setHours(0,0,0,0); return Math.round((t-n)/(1000*60*60*24)); }
+function toast(msg, type='success') {
+  const el = $('toast'); el.className = 'toast ' + type; el.textContent = msg;
+  requestAnimationFrame(() => el.classList.add('visible'));
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('visible'), 3000);
+}
+function confirmDialog(title, message, onConfirm) {
+  openModal(title, `<p style="margin-bottom:16px;line-height:1.6">${esc(message)}</p>`, [
+    { label:'Annuler', class:'btn-secondary', action: closeModal },
+    { label:'Confirmer', class:'btn-danger', action: () => { closeModal(); onConfirm(); } }
+  ]);
+}
+function playAlarmSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    let t = ctx.currentTime;
+    for (let i = 0; i < 6; i++) {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'square';
+      o.frequency.setValueAtTime(880, t);
+      o.frequency.setValueAtTime(660, t + 0.15);
+      g.gain.setValueAtTime(0.15, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+      o.start(t); o.stop(t + 0.3);
+      t += 0.35;
+    }
+  } catch(e) {}
+}
+
+/* ═══ PWA — INSTALLATION ═══ */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('✅ Service Worker enregistré'))
+      .catch(err => console.log('SW échec:', err));
+  });
+}
+
+// Bandeau + bouton d'installation
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Afficher le bouton dans le header
+  const btn = $('btn-install');
+  if (btn) btn.style.display = 'inline-block';
+  // Afficher le bandeau après 3 secondes
+  setTimeout(() => {
+    const b = $('install-banner');
+    if (b && !localStorage.getItem('gv_install_dismissed')) b.classList.add('visible');
+  }, 3000);
+});
+
+// Clic bouton INSTALLER
+document.addEventListener('click', async (e) => {
+  if (e.target.id === 'btn-install' || e.target.closest('#install-banner')) {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        toast('Application installée ✓');
+        $('install-banner').classList.remove('visible');
+        const b = $('btn-install');
+        if (b) b.style.display = 'none';
+      }
+      deferredPrompt = null;
+    } else {
+      // Message d'aide selon la plateforme
+      const ua = navigator.userAgent.toLowerCase();
+      let msg = '';
+      if (/iphone|ipad|ipod/.test(ua)) {
+        msg = 'Pour installer sur iPhone :\n\n1. Appuyez sur le bouton Partager (carré avec flèche ↑)\n2. Faites défiler\n3. Appuyez sur "Sur l\'écran d\'accueil"\n4. Appuyez sur "Ajouter"';
+      } else if (/android/.test(ua)) {
+        msg = 'Pour installer sur Android :\n\n1. Appuyez sur le menu ⋮ (3 points en haut à droite de Chrome)\n2. Appuyez sur "Installer l\'application" ou "Ajouter à l\'écran d\'accueil"\n3. Confirmez';
+      } else {
+        msg = 'Pour installer sur PC :\n\n1. Dans la barre d\'adresse, cliquez sur l\'icône ⊕ ou l\'écran avec flèche\n2. Ou : menu Chrome (⋮) → "Installer Gestion de Véhicules"';
+      }
+      alert(msg);
+    }
+  }
+});
+
+// Détecter si l'app est déjà installée
+window.addEventListener('appinstalled', () => {
+  toast('Application installée avec succès ✓');
+  $('install-banner').classList.remove('visible');
+  const btn = $('btn-install');
+  if (btn) btn.style.display = 'none';
+  deferredPrompt = null;
+});
+
+// Si déjà installée (mode standalone), cacher le bandeau
+if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = $('btn-install');
+    if (btn) btn.style.display = 'none';
+  });
+}
+
+/* ═══ STATE ═══ */
+const state = {
+  currentPage: 'dashboard',
+  cache: { vehicles:[], categories:[], owners:[], drivers:[], missions:[], fuel:[], maintenance:[], expenses:[], revenues:[], salaries:[], documents:[], incidents:[], notifications:[] },
+  filters: {},
+  lastAlarmShown: null
+};
+
+async function refreshCache() {
+  for (const k of Object.keys(state.cache)) state.cache[k] = await dbGetAll(k);
+}
+
+/* ═══ AUTHENTIFICATION ═══ */
+async function checkAuth() {
+  const users = await dbGetAll('users');
+  if (users.length === 0) return false;
+  try {
+    const session = localStorage.getItem('gv_session');
+    if (session) {
+      const user = users.find(u => u.phone === session);
+      if (user) { currentUser = user; return true; }
+    }
+  } catch(e){}
+  return false;
+}
+
+async function login() {
+  const phone = $('login-phone').value.trim().replace(/\s/g, '');
+  const pin = $('login-pin').value.trim();
+  const errorEl = $('login-error');
+  errorEl.classList.remove('visible');
+
+  if (!phone || phone.length < 6) { errorEl.textContent = '❌ Numéro invalide'; errorEl.classList.add('visible'); return; }
+  if (!pin || pin.length !== 4 || !/^\d{4}$/.test(pin)) { errorEl.textContent = '❌ Code à 4 chiffres requis'; errorEl.classList.add('visible'); return; }
+
+  const users = await dbGetAll('users');
+
+  if (users.length === 0) {
+    const newUser = { phone, pin, createdAt: new Date().toISOString() };
+    await dbAdd('users', newUser);
+    currentUser = newUser;
+    try { localStorage.setItem('gv_session', phone); } catch(e){}
+    toast('Compte créé ✓ Bienvenue !');
+    startApp();
+  } else {
+    const user = users.find(u => u.phone === phone && u.pin === pin);
+    if (!user) {
+      errorEl.textContent = '❌ Numéro ou code incorrect';
+      errorEl.classList.add('visible');
+      playAlarmSound();
+      return;
+    }
+    currentUser = user;
+    try { localStorage.setItem('gv_session', phone); } catch(e){}
+    toast('Connexion réussie ✓');
+    startApp();
+  }
+}
+
+function logout() {
+  if (!confirm('Se déconnecter ?')) return;
+  try { localStorage.removeItem('gv_session'); } catch(e){}
+  currentUser = null;
+  $('login-screen').classList.remove('hidden');
+  $('login-phone').value = '';
+  $('login-pin').value = '';
+}
+
+/* ═══ DÉMARRAGE ═══ */
+async function startApp() {
+  $('login-screen').classList.add('hidden');
+  await refreshCache();
+  await generateAlerts();
+  await refreshCache();
+  navigate('dashboard');
+  setInterval(async () => {
+    await refreshCache();
+    await generateAlerts();
+    await refreshCache();
+    updateAlertsBadge();
+  }, 60000);
+}
+
+/* ═══ HELPERS CALCULS ═══ */
+function getVehicleById(id) { return state.cache.vehicles.find(v => v.id === Number(id)); }
+function getDriverById(id) { return state.cache.drivers.find(d => d.id === Number(id)); }
+function getCategoryById(id) { return state.cache.categories.find(c => c.id === Number(id)); }
+function getOwnerById(id) { return state.cache.owners.find(o => o.id === Number(id)); }
+function getVehicleLabel(v) { if (!v) return '—'; return `${v.brand || ''} ${v.model || ''} (${v.plate || ''})`.trim(); }
+
+function computeVehicleFinancials(vehicleId) {
+  const vid = Number(vehicleId);
+  const fuel = state.cache.fuel.filter(f => f.vehicleId === vid);
+  const maint = state.cache.maintenance.filter(m => m.vehicleId === vid);
+  const exp = state.cache.expenses.filter(e => e.vehicleId === vid);
+  const rev = state.cache.revenues.filter(r => r.vehicleId === vid);
+  const missions = state.cache.missions.filter(m => m.vehicleId === vid);
+  const fuelCost = fuel.reduce((s,f) => s + Number(f.totalCost || 0), 0);
+  const maintCost = maint.reduce((s,m) => s + Number(m.cost || 0), 0);
+  const otherExp = exp.reduce((s,e) => s + Number(e.amount || 0), 0);
+  const totalExpenses = fuelCost + maintCost + otherExp;
+  const totalRevenues = rev.reduce((s,r) => s + Number(r.amount || 0), 0);
+  const totalKm = missions.reduce((s,m) => s + Number(m.distance || 0), 0);
+  return {
+    fuelCost, maintCost, otherExp, totalExpenses, totalRevenues, totalKm,
+    balance: totalRevenues - totalExpenses,
+    costPerKm: totalKm > 0 ? totalExpenses / totalKm : 0,
+    revenuePerKm: totalKm > 0 ? totalRevenues / totalKm : 0
+  };
+}
+
+/* ═══ ALERTES ═══ */
+async function generateAlerts() {
+  await dbClear('notifications');
+  const alerts = [];
+  const now = new Date(); now.setHours(0,0,0,0);
+
+  for (const doc of state.cache.documents) {
+    if (!doc.expiryDate) continue;
+    const d = daysUntil(doc.expiryDate);
+    if (d === null) continue;
+    const v = getVehicleById(doc.vehicleId);
+    if (d < 0) alerts.push({ level:'danger', type:'document', title:`${doc.type || 'Document'} EXPIRÉ`, desc:`${getVehicleLabel(v)} — depuis ${Math.abs(d)} jours`, vehicleId:doc.vehicleId, date: now.toISOString() });
+    else if (d <= 7) alerts.push({ level:'danger', type:'document', title:`${doc.type || 'Document'} expire bientôt`, desc:`${getVehicleLabel(v)} — dans ${d} j`, vehicleId:doc.vehicleId, date: now.toISOString() });
+    else if (d <= 30) alerts.push({ level:'warn', type:'document', title:`${doc.type || 'Document'} à renouveler`, desc:`${getVehicleLabel(v)} — dans ${d} j`, vehicleId:doc.vehicleId, date: now.toISOString() });
+  }
+  for (const drv of state.cache.drivers) {
+    if (!drv.licenseExpiry) continue;
+    const d = daysUntil(drv.licenseExpiry);
+    if (d === null) continue;
+    if (d < 0) alerts.push({ level:'danger', type:'permis', title:'Permis EXPIRÉ', desc:`${drv.name} — depuis ${Math.abs(d)} j`, driverId:drv.id, date: now.toISOString() });
+    else if (d <= 30) alerts.push({ level:'warn', type:'permis', title:'Permis expire bientôt', desc:`${drv.name} — dans ${d} j`, driverId:drv.id, date: now.toISOString() });
+  }
+  for (const m of state.cache.maintenance) {
+    if (m.nextDate) {
+      const d = daysUntil(m.nextDate);
+      if (d !== null && d <= 15 && d >= 0) {
+        const v = getVehicleById(m.vehicleId);
+        alerts.push({ level:'warn', type:'entretien', title:'Entretien à prévoir', desc:`${getVehicleLabel(v)} — ${m.type || 'entretien'} dans ${d} j`, vehicleId:m.vehicleId, date: now.toISOString() });
+      }
+    }
+    if (m.nextKm && m.nextKm > 0) {
+      const v = getVehicleById(m.vehicleId);
+      if (v && v.mileage && (m.nextKm - v.mileage) <= 1000) {
+        alerts.push({ level:'warn', type:'entretien', title:'Entretien km proche', desc:`${getVehicleLabel(v)} — dans ${m.nextKm - v.mileage} km`, vehicleId:m.vehicleId, date: now.toISOString() });
+      }
+    }
+  }
+  for (const v of state.cache.vehicles) {
+    if (v.status === 'immobilise' || v.status === 'hors-service') {
+      alerts.push({ level:'warn', type:'vehicule', title:`Véhicule ${v.status === 'immobilise' ? 'immobilisé' : 'hors service'}`, desc:getVehicleLabel(v), vehicleId:v.id, date: now.toISOString() });
+    }
+  }
+  for (const v of state.cache.vehicles) {
+    const fills = state.cache.fuel.filter(f => f.vehicleId === v.id).sort((a,b) => new Date(a.date) - new Date(b.date));
+    if (fills.length >= 3) {
+      const recent = fills.slice(-5);
+      const avg = recent.reduce((s,f) => s + Number(f.liters || 0), 0) / recent.length;
+      const last = Number(fills[fills.length-1].liters || 0);
+      if (last > avg * 1.5) {
+        alerts.push({ level:'warn', type:'consommation', title:'Consommation inhabituelle', desc:`${getVehicleLabel(v)} — ${last.toFixed(1)}L vs ${avg.toFixed(1)}L`, vehicleId:v.id, date: now.toISOString() });
+      }
+    }
+  }
+  for (const m of state.cache.missions) {
+    if (m.status === 'en-cours' && m.date) {
+      const d = -daysUntil(m.date);
+      if (d > 7) {
+        const v = getVehicleById(m.vehicleId);
+        alerts.push({ level:'warn', type:'mission', title:`Mission > ${d} jours`, desc:`${getVehicleLabel(v)} — ${m.destination || ''}`, vehicleId:m.vehicleId, missionId:m.id, date: now.toISOString() });
+      }
+    }
+  }
+  for (const a of alerts) await dbAdd('notifications', a);
+  state.cache.notifications = alerts;
+  updateAlertsBadge();
+  checkUrgentAlarm(alerts);
+  return alerts;
+}
+
+function updateAlertsBadge() {
+  const alerts = state.cache.notifications || [];
+  const urgent = alerts.filter(a => a.level === 'danger').length;
+  const total = alerts.length;
+  const badge = $('alerts-badge');
+  const navBadge = $('nav-alerts-count');
+  if (total > 0) {
+    badge.textContent = `🔔 ${total}`;
+    badge.classList.add('visible');
+    badge.classList.toggle('pulsing', urgent > 0);
+    if (navBadge) { navBadge.textContent = total; navBadge.style.display = 'inline-block'; }
+    badge.style.background = urgent > 0 ? 'var(--danger)' : 'var(--warn)';
+  } else {
+    badge.classList.remove('visible', 'pulsing');
+    if (navBadge) navBadge.style.display = 'none';
+  }
+}
+
+function checkUrgentAlarm(alerts) {
+  const urgent = alerts.filter(a => a.level === 'danger');
+  if (urgent.length === 0) return;
+  const sig = urgent.map(a => a.title + a.desc).join('|');
+  if (state.lastAlarmShown === sig) return;
+  state.lastAlarmShown = sig;
+  setTimeout(() => {
+    $('alarm-list').innerHTML = urgent.slice(0, 5).map(a => `<div class="alarm-list-item"><strong>🔴 ${esc(a.title)}</strong>${esc(a.desc)}</div>`).join('');
+    $('alarm-overlay').classList.add('visible');
+    playAlarmSound();
+    if ('vibrate' in navigator) navigator.vibrate([300, 100, 300, 100, 300]);
+  }, 2000);
+}
+function dismissAlarm() { $('alarm-overlay').classList.remove('visible'); }
+
+/* ═══ NAVIGATION ═══ */
+const PAGES = {
+  'dashboard': renderDashboard,
+  'vehicles': () => renderVehiclesList(null),
+  'vehicles-personal': () => renderVehiclesList('personal'),
+  'vehicles-transport': () => renderVehiclesList('transport'),
+  'vehicles-other': () => renderVehiclesList('other'),
+  'categories': renderCategories,
+  'drivers': renderDrivers,
+  'missions': renderMissions,
+  'fuel': renderFuel,
+  'maintenance': renderMaintenance,
+  'expenses': renderExpenses,
+  'revenues': renderRevenues,
+  'salaries': renderSalaries,
+  'profitability': renderProfitability,
+  'documents': renderDocuments,
+  'incidents': renderIncidents,
+  'alerts': renderAlerts,
+  'reports': renderReports
+};
+async function navigate(page) {
+  if (!PAGES[page]) return;
+  state.currentPage = page;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.page === page));
+  $('sidebar').classList.remove('open');
+  await refreshCache();
+  PAGES[page]();
+}
+
+/* ═══ TABLEAU DE BORD ═══ */
+function renderDashboard() {
+  const v = state.cache.vehicles;
+  const personalCat = state.cache.categories.filter(c => c.group === 'personal').map(c => c.id);
+  const transportCat = state.cache.categories.filter(c => c.group === 'transport').map(c => c.id);
+  const otherCat = state.cache.categories.filter(c => c.group === 'other').map(c => c.id);
+  const personal = v.filter(x => personalCat.includes(x.categoryId));
+  const transport = v.filter(x => transportCat.includes(x.categoryId));
+  const other = v.filter(x => otherCat.includes(x.categoryId));
+  const available = v.filter(x => x.status === 'disponible').length;
+  const inUse = v.filter(x => x.status === 'en-circulation' || x.status === 'en-mission').length;
+  const garage = v.filter(x => x.status === 'au-garage').length;
+  const immobilized = v.filter(x => x.status === 'immobilise' || x.status === 'hors-service').length;
+  const totalExp = state.cache.expenses.reduce((s,e) => s + Number(e.amount||0),0)
+    + state.cache.fuel.reduce((s,f) => s + Number(f.totalCost||0),0)
+    + state.cache.maintenance.reduce((s,m) => s + Number(m.cost||0),0)
+    + state.cache.salaries.reduce((s,x) => s + Number(x.amount||0),0);
+  const totalRev = state.cache.revenues.reduce((s,r) => s + Number(r.amount||0),0);
+  const balance = totalRev - totalExp;
+  const totalFuel = state.cache.fuel.reduce((s,f) => s + Number(f.liters||0),0);
+  const totalFuelCost = state.cache.fuel.reduce((s,f) => s + Number(f.totalCost||0),0);
+  const missionsCount = state.cache.missions.length;
+  const activeMissions = state.cache.missions.filter(m => m.status === 'en-cours').length;
+  const alerts = state.cache.notifications || [];
+
+  $('main').innerHTML = `
+    <div class="page active">
+      <div class="page-header">
+        <div><div class="page-title">🏠 Tableau de bord général</div><div class="page-subtitle">Vue d'ensemble automatique</div></div>
+        <div class="page-actions"><button class="btn btn-primary" onclick="openVehicleForm()">+ Ajouter un véhicule</button></div>
+      </div>
+      <div class="cards-grid">
+        <div class="stat-card"><div class="stat-label">Total véhicules</div><div class="stat-value">${v.length}</div></div>
+        <div class="stat-card info"><div class="stat-label">🚙 Personnels</div><div class="stat-value">${personal.length}</div></div>
+        <div class="stat-card purple"><div class="stat-label">🚕 Transport</div><div class="stat-value">${transport.length}</div></div>
+        <div class="stat-card"><div class="stat-label">🚐 Autres</div><div class="stat-value">${other.length}</div></div>
+        <div class="stat-card success"><div class="stat-label">✅ Disponibles</div><div class="stat-value">${available}</div></div>
+        <div class="stat-card info"><div class="stat-label">🛣️ En circulation</div><div class="stat-value">${inUse}</div></div>
+        <div class="stat-card warn"><div class="stat-label">🔧 Au garage</div><div class="stat-value">${garage}</div></div>
+        <div class="stat-card danger"><div class="stat-label">⛔ Immobilisés</div><div class="stat-value">${immobilized}</div></div>
+      </div>
+      <div class="cards-grid">
+        <div class="stat-card"><div class="stat-label">👨‍✈️ Chauffeurs</div><div class="stat-value">${state.cache.drivers.length}</div></div>
+        <div class="stat-card purple"><div class="stat-label">🛣️ Missions</div><div class="stat-value">${missionsCount}</div><div class="stat-sub">${activeMissions} en cours</div></div>
+        <div class="stat-card success"><div class="stat-label">💵 Recettes</div><div class="stat-value">${fmtMoney(totalRev)}</div></div>
+        <div class="stat-card danger"><div class="stat-label">💰 Dépenses</div><div class="stat-value">${fmtMoney(totalExp)}</div></div>
+        <div class="stat-card ${balance >= 0 ? 'success' : 'danger'}"><div class="stat-label">${balance >= 0 ? '📈 Bénéfice' : '📉 Perte'}</div><div class="stat-value">${fmtMoney(Math.abs(balance))}</div></div>
+        <div class="stat-card warn"><div class="stat-label">⛽ Carburant</div><div class="stat-value">${totalFuel.toFixed(0)} L</div><div class="stat-sub">${fmtMoney(totalFuelCost)}</div></div>
+        <div class="stat-card"><div class="stat-label">🔧 Entretiens</div><div class="stat-value">${state.cache.maintenance.length}</div></div>
+        <div class="stat-card ${alerts.length > 0 ? 'danger' : 'success'}"><div class="stat-label">🔔 Alertes</div><div class="stat-value">${alerts.length}</div><div class="stat-sub">${alerts.filter(a=>a.level==='danger').length} urgentes</div></div>
+      </div>
+      ${alerts.length > 0 ? `<div class="section-card"><h3>🔔 Alertes récentes</h3>
+        ${alerts.slice(0,5).map(a => `<div class="alert-item ${a.level}">
+          <div class="alert-icon">${a.level === 'danger' ? '🔴' : a.level === 'warn' ? '🟠' : '🟢'}</div>
+          <div class="alert-content"><div class="alert-title">${esc(a.title)}</div><div class="alert-desc">${esc(a.desc)}</div></div>
+        </div>`).join('')}
+        <button class="btn btn-secondary btn-sm mt-10" onclick="navigate('alerts')">Voir toutes →</button>
+      </div>` : ''}
+      <div class="section-card">
+        <h3>🚗 Aperçu des véhicules</h3>
+        ${v.length === 0 ? '<div class="table-empty">Aucun véhicule. Cliquez sur ⚡ DÉMO ou ajoutez-en.</div>' :
+        `<div class="table-wrap"><table><thead><tr><th>Immat.</th><th>Marque/Modèle</th><th>Catégorie</th><th>Statut</th><th>Km</th></tr></thead>
+          <tbody>${v.slice(0,8).map(x => {
+            const cat = getCategoryById(x.categoryId);
+            return `<tr><td><strong>${esc(x.plate)}</strong></td><td>${esc(x.brand)} ${esc(x.model)}</td><td>${cat ? esc(cat.name) : '—'}</td><td><span class="tag ${statusTag(x.status)}">${statusLabel(x.status)}</span></td><td>${fmtMoney(x.mileage || 0)} km</td></tr>`;
+          }).join('')}</tbody></table></div>`}
+      </div>
+    </div>`;
+}
+function statusLabel(s) { return {'disponible':'Disponible','en-circulation':'En circulation','en-mission':'En mission','au-garage':'Au garage','immobilise':'Immobilisé','hors-service':'Hors service'}[s] || s; }
+function statusTag(s) { return {'disponible':'tag-success','en-circulation':'tag-info','en-mission':'tag-purple','au-garage':'tag-warn','immobilise':'tag-danger','hors-service':'tag-danger'}[s] || 'tag-primary'; }
+
+/* ═══ VÉHICULES ═══ */
+function renderVehiclesList(group) {
+  const allCats = state.cache.categories;
+  const cats = group ? allCats.filter(c => c.group === group) : allCats;
+  const catIds = cats.map(c => c.id);
+  let list = group ? state.cache.vehicles.filter(v => catIds.includes(v.categoryId)) : state.cache.vehicles;
+  const titles = { personal:'🚙 Véhicules Personnels', transport:'🚕 Véhicules de Transport', other:'🚐 Autres Véhicules', null:'🚗 Tous les véhicules' };
+  const f = state.filters.vehicles || {};
+  let filtered = list.filter(v => {
+    if (f.search) { const s = f.search.toLowerCase(); const hay = `${v.plate} ${v.brand} ${v.model} ${v.chassis||''}`.toLowerCase(); if (!hay.includes(s)) return false; }
+    if (f.status && v.status !== f.status) return false;
+    if (f.category && v.categoryId !== Number(f.category)) return false;
+    return true;
+  });
+  $('main').innerHTML = `
+    <div class="page active">
+      <div class="page-header"><div><div class="page-title">${titles[group]}</div><div class="page-subtitle">${filtered.length} véhicule(s)</div></div>
+        <div class="page-actions"><button class="btn btn-primary" onclick="openVehicleForm()">+ Nouveau véhicule</button></div></div>
+      <div class="filters">
+        <input type="text" id="filter-search" placeholder="🔍 Rechercher..." value="${esc(f.search||'')}">
+        <select id="filter-category"><option value="">Toutes catégories</option>${cats.map(c => `<option value="${c.id}" ${f.category==c.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select>
+        <select id="filter-status"><option value="">Tous statuts</option>${['disponible','en-circulation','en-mission','au-garage','immobilise','hors-service'].map(s => `<option value="${s}" ${f.status===s?'selected':''}>${statusLabel(s)}</option>`).join('')}</select>
+        <button class="btn btn-secondary btn-sm" onclick="clearVehicleFilters()">↺ Reset</button>
+      </div>
+      <div id="vehicles-table-container"></div>
+    </div>`;
+  $('filter-search').addEventListener('input', e => { state.filters.vehicles = {...f, search: e.target.value}; renderVehiclesList(group); });
+  $('filter-category').addEventListener('change', e => { state.filters.vehicles = {...f, category: e.target.value}; renderVehiclesList(group); });
+  $('filter-status').addEventListener('change', e => { state.filters.vehicles = {...f, status: e.target.value}; renderVehiclesList(group); });
+  renderVehiclesTable(filtered);
+}
+function clearVehicleFilters() { state.filters.vehicles = {}; navigate(state.currentPage); }
+function renderVehiclesTable(list) {
+  const el = $('vehicles-table-container'); if (!el) return;
+  if (list.length === 0) { el.innerHTML = `<div class="empty-state"><div class="big">🚗</div><div class="label">Aucun véhicule</div><button class="btn btn-primary" onclick="openVehicleForm()">+ Ajouter</button></div>`; return; }
+  el.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Immat.</th><th>Marque/Modèle</th><th>Catégorie</th><th>Statut</th><th>Km</th><th>Coût</th><th>Recettes</th><th></th></tr></thead>
+    <tbody>${list.map(v => {
+      const cat = getCategoryById(v.categoryId);
+      const fin = computeVehicleFinancials(v.id);
+      return `<tr><td><strong>${esc(v.plate||'—')}</strong></td><td>${esc(v.brand||'')} ${esc(v.model||'')}</td>
+        <td>${cat ? esc(cat.name) : '—'}</td><td><span class="tag ${statusTag(v.status)}">${statusLabel(v.status)}</span></td>
+        <td>${fmtMoney(v.mileage||0)}</td><td>${fmtMoney(fin.totalExpenses)}</td><td>${fmtMoney(fin.totalRevenues)}</td>
+        <td class="text-right"><button class="btn btn-secondary btn-sm" onclick="viewVehicle(${v.id})">👁</button>
+        <button class="btn btn-secondary btn-sm" onclick="openVehicleForm(${v.id})">✎</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteVehicle(${v.id})">🗑</button></td></tr>`;
+    }).join('')}</tbody></table></div>`;
+}
+function openVehicleForm(id) {
+  const v = id ? state.cache.vehicles.find(x => x.id === id) : {};
+  openModal(v.id ? 'Modifier véhicule' : 'Nouveau véhicule', `
+    <div class="form-grid">
+      <div class="form-field"><label>Immatriculation *</label><input id="vf-plate" value="${esc(v.plate||'')}"></div>
+      <div class="form-field"><label>Marque *</label><input id="vf-brand" value="${esc(v.brand||'')}"></div>
+      <div class="form-field"><label>Modèle *</label><input id="vf-model" value="${esc(v.model||'')}"></div>
+      <div class="form-field"><label>Année</label><input type="number" id="vf-year" value="${v.year||''}"></div>
+      <div class="form-field"><label>Couleur</label><input id="vf-color" value="${esc(v.color||'')}"></div>
+      <div class="form-field"><label>N° Châssis</label><input id="vf-chassis" value="${esc(v.chassis||'')}"></div>
+      <div class="form-field"><label>Catégorie *</label><select id="vf-category">${state.cache.categories.map(c => `<option value="${c.id}" ${v.categoryId==c.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Carburant</label><select id="vf-fueltype">${['essence','diesel','hybride','electrique','gpl','autre'].map(x => `<option value="${x}" ${v.fuelType===x?'selected':''}>${x}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Capacité réservoir (L)</label><input type="number" id="vf-tank" value="${v.tankCapacity||''}"></div>
+      <div class="form-field"><label>Kilométrage</label><input type="number" id="vf-mileage" value="${v.mileage||0}"></div>
+      <div class="form-field"><label>Statut</label><select id="vf-status">${['disponible','en-circulation','en-mission','au-garage','immobilise','hors-service'].map(s => `<option value="${s}" ${v.status===s?'selected':''}>${statusLabel(s)}</option>`).join('')}</select></div>
+      <div class="form-field"><label>État</label><select id="vf-condition">${['excellent','bon','moyen','mauvais'].map(x => `<option value="${x}" ${v.condition===x?'selected':''}>${x}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Propriétaire</label><select id="vf-owner"><option value="">—</option>${state.cache.owners.map(o => `<option value="${o.id}" ${v.ownerId==o.id?'selected':''}>${esc(o.name)}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Chauffeur</label><select id="vf-driver"><option value="">—</option>${state.cache.drivers.map(d => `<option value="${d.id}" ${v.driverId==d.id?'selected':''}>${esc(d.name)}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Date acquisition</label><input type="date" id="vf-acqdate" value="${fmtDateInput(v.acquisitionDate)}"></div>
+      <div class="form-field"><label>Prix acquisition</label><input type="number" id="vf-price" value="${v.acquisitionPrice||''}"></div>
+      <div class="form-field full"><label>Notes</label><textarea id="vf-notes">${esc(v.notes||'')}</textarea></div>
+    </div>
+  `, [{ label:'Annuler', class:'btn-secondary', action: closeModal },
+      { label: v.id ? 'Enregistrer' : 'Créer', class:'btn-primary', action: () => saveVehicle(v.id) }], 'large');
+}
+async function saveVehicle(id) {
+  const data = {
+    plate: $('vf-plate').value.trim(), brand: $('vf-brand').value.trim(), model: $('vf-model').value.trim(),
+    year: Number($('vf-year').value) || null, color: $('vf-color').value.trim(), chassis: $('vf-chassis').value.trim(),
+    categoryId: Number($('vf-category').value) || null, fuelType: $('vf-fueltype').value,
+    tankCapacity: Number($('vf-tank').value) || null, mileage: Number($('vf-mileage').value) || 0,
+    status: $('vf-status').value, condition: $('vf-condition').value,
+    ownerId: Number($('vf-owner').value) || null, driverId: Number($('vf-driver').value) || null,
+    acquisitionDate: $('vf-acqdate').value, acquisitionPrice: Number($('vf-price').value) || null,
+    notes: $('vf-notes').value.trim()
+  };
+  if (!data.plate || !data.brand || !data.model || !data.categoryId) { toast('Champs obligatoires manquants', 'error'); return; }
+  if (id) { data.id = id; await dbPut('vehicles', data); toast('Véhicule modifié'); }
+  else { await dbAdd('vehicles', data); toast('Véhicule créé'); }
+  closeModal(); await generateAlerts(); navigate(state.currentPage);
+}
+function deleteVehicle(id) {
+  confirmDialog('Supprimer ce véhicule ?', 'Action irréversible.', async () => {
+    await dbDelete('vehicles', id); toast('Supprimé', 'warn'); await generateAlerts(); navigate(state.currentPage);
+  });
+}
+function viewVehicle(id) {
+  const v = getVehicleById(id); if (!v) return;
+  const cat = getCategoryById(v.categoryId), drv = getDriverById(v.driverId), own = getOwnerById(v.ownerId);
+  const fin = computeVehicleFinancials(id);
+  openModal(`Véhicule ${v.plate}`, `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px">
+      <div><strong>Marque:</strong> ${esc(v.brand)} ${esc(v.model)}</div>
+      <div><strong>Année:</strong> ${v.year||'—'}</div>
+      <div><strong>Catégorie:</strong> ${cat?esc(cat.name):'—'}</div>
+      <div><strong>Statut:</strong> ${statusLabel(v.status)}</div>
+      <div><strong>Km:</strong> ${fmtMoney(v.mileage||0)}</div>
+      <div><strong>Chauffeur:</strong> ${drv?esc(drv.name):'—'}</div>
+      <div><strong>Propriétaire:</strong> ${own?esc(own.name):'—'}</div>
+    </div>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+      <h3 style="font-size:13px;text-transform:uppercase;color:var(--ink-dim);margin-bottom:10px">💰 Bilan financier automatique</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">
+        <div><div style="font-size:11px;color:var(--ink-dim)">Carburant</div><div style="font-weight:700">${fmtMoney(fin.fuelCost)}</div></div>
+        <div><div style="font-size:11px;color:var(--ink-dim)">Entretiens</div><div style="font-weight:700">${fmtMoney(fin.maintCost)}</div></div>
+        <div><div style="font-size:11px;color:var(--ink-dim)">Dépenses</div><div style="font-weight:700;color:#fca5a5">${fmtMoney(fin.totalExpenses)}</div></div>
+        <div><div style="font-size:11px;color:var(--ink-dim)">Recettes</div><div style="font-weight:700;color:#6ee7b7">${fmtMoney(fin.totalRevenues)}</div></div>
+        <div><div style="font-size:11px;color:var(--ink-dim)">Bilan</div><div style="font-weight:700">${fmtMoney(fin.balance)}</div></div>
+      </div>
+    </div>
+  `, [{ label:'Fermer', class:'btn-secondary', action: closeModal }], 'large');
+}
+
+/* ═══ CATÉGORIES ═══ */
+function renderCategories() {
+  const cats = state.cache.categories;
+  const groups = { personal:'🚙 Personnels', transport:'🚕 Transport', other:'🚐 Autres' };
+  $('main').innerHTML = `
+    <div class="page active">
+      <div class="page-header"><div><div class="page-title">📁 Catégories</div><div class="page-subtitle">Gestion des catégories</div></div>
+        <div class="page-actions"><button class="btn btn-primary" onclick="openCategoryForm()">+ Nouvelle catégorie</button></div></div>
+      ${Object.entries(groups).map(([g, label]) => {
+        const list = cats.filter(c => c.group === g);
+        return `<div class="section-card"><h3>${label}</h3>
+          ${list.length === 0 ? '<div class="table-empty">Aucune</div>' : `
+          <div class="table-wrap"><table><thead><tr><th>Nom</th><th>Description</th><th>Véhicules</th><th></th></tr></thead>
+          <tbody>${list.map(c => `<tr><td><strong>${esc(c.name)}</strong></td><td>${esc(c.description||'—')}</td>
+            <td>${state.cache.vehicles.filter(v => v.categoryId === c.id).length}</td>
+            <td class="text-right"><button class="btn btn-secondary btn-sm" onclick="openCategoryForm(${c.id})">✎</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteCategory(${c.id})">🗑</button></td></tr>`).join('')}</tbody></table></div>`}
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+function openCategoryForm(id) {
+  const c = id ? state.cache.categories.find(x => x.id === id) : {};
+  openModal(c.id ? 'Modifier catégorie' : 'Nouvelle catégorie', `
+    <div class="form-grid">
+      <div class="form-field full"><label>Nom *</label><input id="cf-name" value="${esc(c.name||'')}"></div>
+      <div class="form-field"><label>Groupe *</label><select id="cf-group">
+        <option value="personal" ${c.group==='personal'?'selected':''}>Personnel</option>
+        <option value="transport" ${c.group==='transport'?'selected':''}>Transport</option>
+        <option value="other" ${c.group==='other'?'selected':''}>Autre</option>
+      </select></div>
+      <div class="form-field full"><label>Description</label><input id="cf-desc" value="${esc(c.description||'')}"></div>
+    </div>
+  `, [{ label:'Annuler', class:'btn-secondary', action: closeModal },
+      { label: c.id ? 'Enregistrer' : 'Créer', class:'btn-primary', action: async () => {
+        const data = { name: $('cf-name').value.trim(), group: $('cf-group').value, description: $('cf-desc').value.trim() };
+        if (!data.name) { toast('Nom requis', 'error'); return; }
+        if (c.id) { data.id = c.id; await dbPut('categories', data); } else { await dbAdd('categories', data); }
+        closeModal(); toast('Enregistrée'); navigate('categories');
+      }}]);
+}
+function deleteCategory(id) {
+  if (state.cache.vehicles.filter(v => v.categoryId === id).length > 0) { toast('Catégorie utilisée', 'error'); return; }
+  confirmDialog('Supprimer ?', 'Action irréversible.', async () => {
+    await dbDelete('categories', id); toast('Supprimée', 'warn'); navigate('categories');
+  });
+}
+
+/* ═══ CHAUFFEURS ═══ */
+function renderDrivers() {
+  const list = state.cache.drivers;
+  $('main').innerHTML = `
+    <div class="page active">
+      <div class="page-header"><div><div class="page-title">👨‍✈️ Chauffeurs</div><div class="page-subtitle">${list.length} chauffeur(s)</div></div>
+        <div class="page-actions"><button class="btn btn-primary" onclick="openDriverForm()">+ Nouveau chauffeur</button></div></div>
+      ${list.length === 0 ? '<div class="empty-state"><div class="big">👨‍✈️</div><div class="label">Aucun chauffeur</div><button class="btn btn-primary" onclick="openDriverForm()">+ Ajouter</button></div>' : `
+      <div class="table-wrap"><table><thead><tr><th>Nom</th><th>Téléphone</th><th>Permis</th><th>Expiration</th><th>Véhicule</th><th></th></tr></thead>
+      <tbody>${list.map(d => {
+        const v = getVehicleById(d.vehicleId);
+        const exp = d.licenseExpiry ? daysUntil(d.licenseExpiry) : null;
+        const expTag = exp !== null && exp < 0 ? 'tag-danger' : exp !== null && exp <= 30 ? 'tag-warn' : 'tag-success';
+        return `<tr><td><strong>${esc(d.name)}</strong></td><td>${esc(d.phone||'—')}</td><td>${esc(d.licenseNumber||'—')}</td>
+          <td>${d.licenseExpiry ? `<span class="tag ${expTag}">${fmtDate(d.licenseExpiry)}</span>` : '—'}</td>
+          <td>${v ? esc(getVehicleLabel(v)) : '—'}</td>
+          <td class="text-right"><button class="btn btn-secondary btn-sm" onclick="openDriverForm(${d.id})">✎</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteDriver(${d.id})">🗑</button></td></tr>`;
+      }).join('')}</tbody></table></div>`}
+    </div>`;
+}
+function openDriverForm(id) {
+  const d = id ? state.cache.drivers.find(x => x.id === id) : {};
+  openModal(d.id ? 'Modifier chauffeur' : 'Nouveau chauffeur', `
+    <div class="form-grid">
+      <div class="form-field full"><label>Nom *</label><input id="df-name" value="${esc(d.name||'')}"></div>
+      <div class="form-field"><label>Téléphone</label><input id="df-phone" value="${esc(d.phone||'')}"></div>
+      <div class="form-field"><label>Adresse</label><input id="df-address" value="${esc(d.address||'')}"></div>
+      <div class="form-field"><label>N° Permis</label><input id="df-license" value="${esc(d.licenseNumber||'')}"></div>
+      <div class="form-field"><label>Catégorie permis</label><input id="df-licensecat" value="${esc(d.licenseCategory||'')}"></div>
+      <div class="form-field"><label>Expiration permis</label><input type="date" id="df-licenseexp" value="${fmtDateInput(d.licenseExpiry)}"></div>
+      <div class="form-field"><label>Date embauche</label><input type="date" id="df-hiredate" value="${fmtDateInput(d.hireDate)}"></div>
+      <div class="form-field"><label>Salaire mensuel</label><input type="number" id="df-salary" value="${d.salary||''}"></div>
+      <div class="form-field"><label>Statut</label><select id="df-status">${['actif','inactif','suspendu'].map(s => `<option value="${s}" ${d.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Véhicule affecté</label><select id="df-vehicle"><option value="">—</option>${state.cache.vehicles.map(v => `<option value="${v.id}" ${d.vehicleId==v.id?'selected':''}>${esc(getVehicleLabel(v))}</option>`).join('')}</select></div>
+    </div>
+  `, [{ label:'Annuler', class:'btn-secondary', action: closeModal },
+      { label: d.id ? 'Enregistrer' : 'Créer', class:'btn-primary', action: async () => {
+        const data = { name: $('df-name').value.trim(), phone: $('df-phone').value.trim(), address: $('df-address').value.trim(),
+          licenseNumber: $('df-license').value.trim(), licenseCategory: $('df-licensecat').value.trim(),
+          licenseExpiry: $('df-licenseexp').value, hireDate: $('df-hiredate').value,
+          salary: Number($('df-salary').value) || null, status: $('df-status').value, vehicleId: Number($('df-vehicle').value) || null };
+        if (!data.name) { toast('Nom requis', 'error'); return; }
+        if (d.id) { data.id = d.id; await dbPut('drivers', data); } else { await dbAdd('drivers', data); }
+        closeModal(); toast('Enregistré'); await generateAlerts(); navigate('drivers');
+      }}]);
+}
+function deleteDriver(id) {
+  confirmDialog('Supprimer ce chauffeur ?', 'Action irréversible.', async () => {
+    await dbDelete('drivers', id); toast('Supprimé', 'warn'); navigate('drivers');
+  });
+}
+
+/* ═══ MISSIONS ═══ */
+function renderMissions() {
+  const list = state.cache.missions;
+  $('main').innerHTML = `
+    <div class="page active">
+      <div class="page-header"><div><div class="page-title">🛣️ Missions</div><div class="page-subtitle">${list.length} mission(s)</div></div>
+        <div class="page-actions"><button class="btn btn-primary" onclick="openMissionForm()">+ Nouvelle mission</button></div></div>
+      ${list.length === 0 ? '<div class="empty-state"><div class="big">🛣️</div><div class="label">Aucune mission</div><button class="btn btn-primary" onclick="openMissionForm()">+ Créer</button></div>' : `
+      <div class="table-wrap"><table><thead><tr><th>Véhicule</th><th>Chauffeur</th><th>Trajet</th><th>Date</th><th>Distance</th><th>Recette</th><th>Bilan</th><th>Statut</th><th></th></tr></thead>
+      <tbody>${list.map(m => {
+        const v = getVehicleById(m.vehicleId), d = getDriverById(m.driverId);
+        const dist = (m.endMileage && m.startMileage) ? m.endMileage - m.startMileage : (m.distance || 0);
+        const bal = (m.revenue||0) - (m.expenses||0);
+        return `<tr><td>${v ? esc(v.plate) : '—'}</td><td>${d ? esc(d.name) : '—'}</td>
+          <td>${esc(m.origin||'')} → ${esc(m.destination||'')}</td><td>${fmtDate(m.date)}</td>
+          <td>${fmtMoney(dist)} km</td><td>${fmtMoney(m.revenue||0)}</td>
+          <td style="color:${bal>=0?'#6ee7b7':'#fca5a5'};font-weight:700">${fmtMoney(bal)}</td>
+          <td><span class="tag ${m.status==='terminee'?'tag-success':m.status==='en-cours'?'tag-info':m.status==='annulee'?'tag-danger':'tag-warn'}">${m.status||'planifiee'}</span></td>
+          <td class="text-right"><button class="btn btn-secondary btn-sm" onclick="openMissionForm(${m.id})">✎</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteMission(${m.id})">🗑</button></td></tr>`;
+      }).join('')}</tbody></table></div>`}
+    </div>`;
+}
+function openMissionForm(id) {
+  const m = id ? state.cache.missions.find(x => x.id === id) : {};
+  openModal(m.id ? 'Modifier mission' : 'Nouvelle mission', `
+    <div class="form-grid">
+      <div class="form-field"><label>Véhicule *</label><select id="mf-vehicle"><option value="">—</option>${state.cache.vehicles.map(v => `<option value="${v.id}" ${m.vehicleId==v.id?'selected':''}>${esc(getVehicleLabel(v))}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Chauffeur</label><select id="mf-driver"><option value="">—</option>${state.cache.drivers.map(d => `<option value="${d.id}" ${m.driverId==d.id?'selected':''}>${esc(d.name)}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Départ *</label><input id="mf-origin" value="${esc(m.origin||'')}"></div>
+      <div class="form-field"><label>Destination *</label><input id="mf-dest" value="${esc(m.destination||'')}"></div>
+      <div class="form-field"><label>Date</label><input type="date" id="mf-date" value="${fmtDateInput(m.date||today())}"></div>
+      <div class="form-field"><label>Km départ</label><input type="number" id="mf-startkm" value="${m.startMileage||''}"></div>
+      <div class="form-field"><label>Km arrivée</label><input type="number" id="mf-endkm" value="${m.endMileage||''}"></div>
+      <div class="form-field"><label>Recette</label><input type="number" id="mf-revenue" value="${m.revenue||''}"></div>
+      <div class="form-field"><label>Dépenses</label><input type="number" id="mf-expenses" value="${m.expenses||''}"></div>
+      <div class="form-field"><label>Statut</label><select id="mf-status">${['planifiee','en-cours','terminee','annulee'].map(s => `<option value="${s}" ${m.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+    </div>
+  `, [{ label:'Annuler', class:'btn-secondary', action: closeModal },
+      { label: m.id ? 'Enregistrer' : 'Créer', class:'btn-primary', action: () => saveMission(m.id) }]);
+}
+async function saveMission(id) {
+  const data = {
+    vehicleId: Number($('mf-vehicle').value), driverId: Number($('mf-driver').value) || null,
+    origin: $('mf-origin').value.trim(), destination: $('mf-dest').value.trim(),
+    date: $('mf-date').value, startMileage: Number($('mf-startkm').value) || null,
+    endMileage: Number($('mf-endkm').value) || null, revenue: Number($('mf-revenue').value) || 0,
+    expenses: Number($('mf-expenses').value) || 0, status: $('mf-status').value
+  };
+  if (!data.vehicleId || !data.origin || !data.destination) { toast('Champs requis', 'error'); return; }
+  data.distance = (data.endMileage && data.startMileage) ? data.endMileage - data.startMileage : 0;
+  if (id) { data.id = id; await dbPut('missions', data); } else { await dbAdd('missions', data); }
+  if (data.status === 'terminee' && data.endMileage) {
+    const v = await dbGet('vehicles', data.vehicleId);
+    if (v && data.endMileage > (v.mileage || 0)) { v.mileage = data.endMileage; v.status = 'disponible'; await dbPut('vehicles', v); }
+  }
+  if (data.revenue > 0 && data.status === 'terminee') {
+    await dbAdd('revenues', { vehicleId: data.vehicleId, amount: data.revenue, date: data.date, source: 'mission', notes: 'Mission ' + data.origin + ' → ' + data.destination });
+  }
+  closeModal(); toast('Enregistrée'); await generateAlerts(); navigate('missions');
+}
+function deleteMission(id) {
+  confirmDialog('Supprimer cette mission ?', 'Action irréversible.', async () => {
+    await dbDelete('missions', id); toast('Supprimée', 'warn'); navigate('missions');
+  });
+}
+
+/* ═══ CARBURANT ═══ */
+function renderFuel() {
+  const list = state.cache.fuel;
+  const totalL = list.reduce((s,f) => s + Number(f.liters||0), 0);
+  const totalC = list.reduce((s,f) => s + Number(f.totalCost||0), 0);
+  $('main').innerHTML = `
+    <div class="page active">
+      <div class="page-header"><div><div class="page-title">⛽ Carburant</div><div class="page-subtitle">${list.length} plein(s) · ${totalL.toFixed(1)} L · ${fmtMoney(totalC)}</div></div>
+        <div class="page-actions"><button class="btn btn-primary" onclick="openFuelForm()">+ Nouveau plein</button></div></div>
+      <div class="cards-grid">
+        <div class="stat-card"><div class="stat-label">Total litres</div><div class="stat-value">${totalL.toFixed(0)}</div></div>
+        <div class="stat-card danger"><div class="stat-label">Total coût</div><div class="stat-value">${fmtMoney(totalC)}</div></div>
+        <div class="stat-card info"><div class="stat-label">Prix moyen/L</div><div class="stat-value">${totalL > 0 ? (totalC/totalL).toFixed(2) : '0'}</div></div>
+        <div class="stat-card"><div class="stat-label">Pleins</div><div class="stat-value">${list.length}</div></div>
+      </div>
+      ${list.length === 0 ? '<div class="empty-state"><div class="big">⛽</div><div class="label">Aucun plein</div><button class="btn btn-primary" onclick="openFuelForm()">+ Ajouter</button></div>' : `
+      <div class="table-wrap"><table><thead><tr><th>Date</th><th>Véhicule</th><th>Station</th><th>Litres</th><th>Total</th><th></th></tr></thead>
+      <tbody>${list.slice().reverse().map(f => {
+        const v = getVehicleById(f.vehicleId);
+        return `<tr><td>${fmtDate(f.date)}</td><td>${v ? esc(v.plate) : '—'}</td><td>${esc(f.station||'—')}</td>
+          <td>${f.liters||0} L</td><td><strong>${fmtMoney(f.totalCost)}</strong></td>
+          <td class="text-right"><button class="btn btn-danger btn-sm" onclick="deleteFuel(${f.id})">🗑</button></td></tr>`;
+      }).join('')}</tbody></table></div>`}
+    </div>`;
+}
+function openFuelForm() {
+  openModal('Nouveau plein', `
+    <div class="form-grid">
+      <div class="form-field"><label>Véhicule *</label><select id="ff-vehicle"><option value="">—</option>${state.cache.vehicles.map(v => `<option value="${v.id}">${esc(getVehicleLabel(v))}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Date</label><input type="date" id="ff-date" value="${today()}"></div>
+      <div class="form-field"><label>Station</label><input id="ff-station"></div>
+      <div class="form-field"><label>Litres *</label><input type="number" step="0.01" id="ff-liters"></div>
+      <div class="form-field"><label>Prix/L</label><input type="number" step="0.01" id="ff-price"></div>
+      <div class="form-field"><label>Total (auto)</label><input type="number" id="ff-total" readonly style="opacity:.7"></div>
+      <div class="form-field"><label>Kilométrage</label><input type="number" id="ff-mileage"></div>
+    </div>
+  `, [{ label:'Annuler', class:'btn-secondary', action: closeModal },
+      { label:'Enregistrer', class:'btn-primary', action: saveFuel }]);
+  const updateTotal = () => { const l = Number($('ff-liters').value) || 0, p = Number($('ff-price').value) || 0; $('ff-total').value = (l*p).toFixed(2); };
+  $('ff-liters').addEventListener('input', updateTotal);
+  $('ff-price').addEventListener('input', updateTotal);
+}
+async function saveFuel() {
+  const liters = Number($('ff-liters').value) || 0, price = Number($('ff-price').value) || 0;
+  const data = { vehicleId: Number($('ff-vehicle').value), date: $('ff-date').value,
+    station: $('ff-station').value.trim(), liters, pricePerLiter: price,
+    totalCost: liters * price, mileage: Number($('ff-mileage').value) || null };
+  if (!data.vehicleId || liters <= 0) { toast('Champs requis', 'error'); return; }
+  await dbAdd('fuel', data);
+  await dbAdd('expenses', { vehicleId: data.vehicleId, date: data.date, amount: data.totalCost, category: 'carburant', description: 'Plein ' + liters + 'L', source: 'fuel' });
+  closeModal(); toast('Plein enregistré'); await generateAlerts(); navigate('fuel');
+}
+function deleteFuel(id) {
+  confirmDialog('Supprimer ce plein ?', 'Action irréversible.', async () => {
+    await dbDelete('fuel', id); toast('Supprimé', 'warn'); navigate('fuel');
+  });
+}
+
+/* ═══ ENTRETIENS ═══ */
+function renderMaintenance() {
+  const list = state.cache.maintenance;
+  const total = list.reduce((s,m) => s + Number(m.cost||0), 0);
+  $('main').innerHTML = `
+    <div class="page active">
+      <div class="page-header"><div><div class="page-title">🔧 Entretiens</div><div class="page-subtitle">${list.length} entretien(s) · ${fmtMoney(total)}</div></div>
+        <div class="page-actions"><button class="btn btn-primary" onclick="openMaintenanceForm()">+ Nouvel entretien</button></div></div>
+      ${list.length === 0 ? '<div class="empty-state"><div class="big">🔧</div><div class="label">Aucun entretien</div><button class="btn btn-primary" onclick="openMaintenanceForm()">+ Ajouter</button></div>' : `
+      <div class="table-wrap"><table><thead><tr><th>Date</th><th>Véhicule</th><th>Type</th><th>Coût</th><th>Prochaine</th><th></th></tr></thead>
+      <tbody>${list.slice().reverse().map(m => {
+        const v = getVehicleById(m.vehicleId);
+        return `<tr><td>${fmtDate(m.date)}</td><td>${v ? esc(v.plate) : '—'}</td>
+          <td><span class="tag tag-info">${esc(m.type||'—')}</span></td><td><strong>${fmtMoney(m.cost)}</strong></td>
+          <td>${fmtDate(m.nextDate)}</td>
+          <td class="text-right"><button class="btn btn-danger btn-sm" onclick="deleteMaintenance(${m.id})">🗑</button></td></tr>`;
+      }).join('')}</tbody></table></div>`}
+    </div>`;
+}
+function openMaintenanceForm() {
+  openModal('Nouvel entretien', `
+    <div class="form-grid">
+      <div class="form-field"><label>Véhicule *</label><select id="mf2-vehicle"><option value="">—</option>${state.cache.vehicles.map(v => `<option value="${v.id}">${esc(getVehicleLabel(v))}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Date</label><input type="date" id="mf2-date" value="${today()}"></div>
+      <div class="form-field"><label>Type *</label><select id="mf2-type">${['vidange','pneus','freins','batterie','moteur','suspension','reparation','electricite','carrosserie','autre'].map(t => `<option value="${t}">${t}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Coût *</label><input type="number" id="mf2-cost"></div>
+      <div class="form-field"><label>Garage</label><input id="mf2-garage"></div>
+      <div class="form-field"><label>Prochaine date</label><input type="date" id="mf2-nextdate"></div>
+      <div class="form-field"><label>Prochain km</label><input type="number" id="mf2-nextkm"></div>
+    </div>
+  `, [{ label:'Annuler', class:'btn-secondary', action: closeModal },
+      { label:'Enregistrer', class:'btn-primary', action: async () => {
+        const data = { vehicleId: Number($('mf2-vehicle').value), date: $('mf2-date').value, type: $('mf2-type').value,
+          cost: Number($('mf2-cost').value) || 0, garage: $('mf2-garage').value.trim(),
+          nextDate: $('mf2-nextdate').value, nextKm: Number($('mf2-nextkm').value) || null };
+        if (!data.vehicleId || !data.cost) { toast('Champs requis', 'error'); return; }
+        await dbAdd('maintenance', data);
+        await dbAdd('expenses', { vehicleId: data.vehicleId, date: data.date, amount: data.cost, category: 'entretien', description: 'Entretien ' + data.type, source: 'maintenance' });
+        closeModal(); toast('Enregistré'); await generateAlerts(); navigate('maintenance');
+      }}]);
+}
+function deleteMaintenance(id) {
+  confirmDialog('Supprimer cet entretien ?', 'Action irréversible.', async () => {
+    await dbDelete('maintenance', id); toast('Supprimé', 'warn'); navigate('maintenance');
+  });
+}
+
+/* ═══ DÉPENSES ═══ */
+function renderExpenses() {
+  const list = state.cache.expenses;
+  const total = list.reduce((s,e) => s + Number(e.amount||0), 0);
+  $('main').innerHTML = `
+    <div class="page active">
+      <div class="page-header"><div><div class="page-title">💰 Dépenses</div><div class="page-subtitle">${list.length} dépense(s) · ${fmtMoney(total)}</div></div>
+        <div class="page-actions"><button class="btn btn-primary" onclick="openExpenseForm()">+ Nouvelle dépense</button></div></div>
+      ${list.length === 0 ? '<div class="empty-state"><div class="big">💰</div><div class="label">Aucune dépense</div><button class="btn btn-primary" onclick="openExpenseForm()">+ Ajouter</button></div>' : `
+      <div class="table-wrap"><table><thead><tr><th>Date</th><th>Véhicule</th><th>Catégorie</th><th>Description</th><th>Montant</th><th></th></tr></thead>
+      <tbody>${list.slice().reverse().map(e => {
+        const v = getVehicleById(e.vehicleId);
+        return `<tr><td>${fmtDate(e.date)}</td><td>${v ? esc(v.plate) : '—'}</td>
+          <td><span class="tag tag-warn">${esc(e.category||'—')}</span></td><td>${esc(e.description||'—')}</td>
+          <td><strong>${fmtMoney(e.amount)}</strong></td>
+          <td class="text-right"><button class="btn btn-danger btn-sm" onclick="deleteExpense(${e.id})">🗑</button></td></tr>`;
+      }).join('')}</tbody></table></div>`}
+    </div>`;
+}
+function openExpenseForm() {
+  openModal('Nouvelle dépense', `
+    <div class="form-grid">
+      <div class="form-field"><label>Véhicule</label><select id="ef-vehicle"><option value="">—</option>${state.cache.vehicles.map(v => `<option value="${v.id}">${esc(getVehicleLabel(v))}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Date</label><input type="date" id="ef-date" value="${today()}"></div>
+      <div class="form-field"><label>Catégorie *</label><select id="ef-category">${['carburant','entretien','reparation','salaire','assurance','taxes','pneus','pieces','lavage','parking','amendes','autres'].map(c => `<option value="${c}">${c}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Montant *</label><input type="number" id="ef-amount"></div>
+      <div class="form-field full"><label>Description</label><input id="ef-desc"></div>
+    </div>
+  `, [{ label:'Annuler', class:'btn-secondary', action: closeModal },
+      { label:'Enregistrer', class:'btn-primary', action: async () => {
+        const data = { vehicleId: Number($('ef-vehicle').value) || null, date: $('ef-date').value, category: $('ef-category').value, amount: Number($('ef-amount').value) || 0, description: $('ef-desc').value.trim() };
+        if (!data.amount) { toast('Montant requis', 'error'); return; }
+        await dbAdd('expenses', data); closeModal(); toast('Enregistrée'); navigate('expenses');
+      }}]);
+}
+function deleteExpense(id) {
+  confirmDialog('Supprimer cette dépense ?', 'Action irréversible.', async () => {
+    await dbDelete('expenses', id); toast('Supprimée', 'warn'); navigate('expenses');
+  });
+}
+
+/* ═══ RECETTES ═══ */
+function renderRevenues() {
+  const list = state.cache.revenues;
+  const total = list.reduce((s,r) => s + Number(r.amount||0), 0);
+  $('main').innerHTML = `
+    <div class="page active">
+      <div class="page-header"><div><div class="page-title">💵 Recettes</div><div class="page-subtitle">${list.length} recette(s) · ${fmtMoney(total)}</div></div>
+        <div class="page-actions"><button class="btn btn-primary" onclick="openRevenueForm()">+ Nouvelle recette</button></div></div>
+      ${list.length === 0 ? '<div class="empty-state"><div class="big">💵</div><div class="label">Aucune recette</div><button class="btn btn-primary" onclick="openRevenueForm()">+ Ajouter</button></div>' : `
+      <div class="table-wrap"><table><thead><tr><th>Date</th><th>Véhicule</th><th>Source</th><th>Montant</th><th></th></tr></thead>
+      <tbody>${list.slice().reverse().map(r => {
+        const v = getVehicleById(r.vehicleId);
+        return `<tr><td>${fmtDate(r.date)}</td><td>${v ? esc(v.plate) : '—'}</td>
+          <td><span class="tag tag-success">${esc(r.source||'—')}</span></td>
+          <td><strong>${fmtMoney(r.amount)}</strong></td>
+          <td class="text-right"><button class="btn btn-danger btn-sm" onclick="deleteRevenue(${r.id})">🗑</button></td></tr>`;
+      }).join('')}</tbody></table></div>`}
+    </div>`;
+}
+function openRevenueForm() {
+  openModal('Nouvelle recette', `
+    <div class="form-grid">
+      <div class="form-field"><label>Véhicule</label><select id="rf-vehicle"><option value="">—</option>${state.cache.vehicles.map(v => `<option value="${v.id}">${esc(getVehicleLabel(v))}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Date</label><input type="date" id="rf-date" value="${today()}"></div>
+      <div class="form-field"><label>Source</label><input id="rf-source" placeholder="mission, location..."></div>
+      <div class="form-field"><label>Montant *</label><input type="number" id="rf-amount"></div>
+    </div>
+  `, [{ label:'Annuler', class:'btn-secondary', action: closeModal },
+      { label:'Enregistrer', class:'btn-primary', action: async () => {
+        const data = { vehicleId: Number($('rf-vehicle').value) || null, date: $('rf-date').value, source: $('rf-source').value.trim() || 'autre', amount: Number($('rf-amount').value) || 0 };
+        if (!data.amount) { toast('Montant requis', 'error'); return; }
+        await dbAdd('revenues', data); closeModal(); toast('Enregistrée'); navigate('revenues');
+      }}]);
+}
+function deleteRevenue(id) {
+  confirmDialog('Supprimer cette recette ?', 'Action irréversible.', async () => {
+    await dbDelete('revenues', id); toast('Supprimée', 'warn'); navigate('revenues');
+  });
+}
+
+/* ═══ SALAIRES ═══ */
+function renderSalaries() {
+  const list = state.cache.salaries;
+  const total = list.reduce((s,x) => s + Number(x.amount||0), 0);
+  $('main').innerHTML = `
+    <div class="page active">
+      <div class="page-header"><div><div class="page-title">💳 Salaires</div><div class="page-subtitle">${list.length} paiement(s) · ${fmtMoney(total)}</div></div>
+        <div class="page-actions"><button class="btn btn-primary" onclick="openSalaryForm()">+ Nouveau paiement</button></div></div>
+      ${list.length === 0 ? '<div class="empty-state"><div class="big">💳</div><div class="label">Aucun salaire</div><button class="btn btn-primary" onclick="openSalaryForm()">+ Ajouter</button></div>' : `
+      <div class="table-wrap"><table><thead><tr><th>Date</th><th>Chauffeur</th><th>Montant</th><th>Période</th><th></th></tr></thead>
+      <tbody>${list.slice().reverse().map(s => {
+        const d = getDriverById(s.driverId);
+        return `<tr><td>${fmtDate(s.date)}</td><td>${d ? esc(d.name) : '—'}</td>
+          <td><strong>${fmtMoney(s.amount)}</strong></td><td>${esc(s.period||'—')}</td>
+          <td class="text-right"><button class="btn btn-danger btn-sm" onclick="deleteSalary(${s.id})">🗑</button></td></tr>`;
+      }).join('')}</tbody></table></div>`}
+    </div>`;
+}
+function openSalaryForm() {
+  openModal('Nouveau paiement', `
+    <div class="form-grid">
+      <div class="form-field"><label>Chauffeur *</label><select id="sf-driver"><option value="">—</option>${state.cache.drivers.map(d => `<option value="${d.id}" data-salary="${d.salary||0}">${esc(d.name)}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Date</label><input type="date" id="sf-date" value="${today()}"></div>
+      <div class="form-field"><label>Montant *</label><input type="number" id="sf-amount"></div>
+      <div class="form-field"><label>Période</label><input id="sf-period"></div>
+    </div>
+  `, [{ label:'Annuler', class:'btn-secondary', action: closeModal },
+      { label:'Enregistrer', class:'btn-primary', action: async () => {
+        const data = { driverId: Number($('sf-driver').value), date: $('sf-date').value, amount: Number($('sf-amount').value) || 0, period: $('sf-period').value.trim() };
+        if (!data.driverId || !data.amount) { toast('Champs requis', 'error'); return; }
+        await dbAdd('salaries', data);
+        await dbAdd('expenses', { date: data.date, amount: data.amount, category: 'salaire', description: 'Salaire ' + data.period });
+        closeModal(); toast('Enregistré'); navigate('salaries');
+      }}]);
+  $('sf-driver').addEventListener('change', e => {
+    const opt = e.target.selectedOptions[0];
+    if (opt && opt.dataset.salary) $('sf-amount').value = opt.dataset.salary;
+  });
+}
+function deleteSalary(id) {
+  confirmDialog('Supprimer ce paiement ?', 'Action irréversible.', async () => {
+    await dbDelete('salaries', id); toast('Supprimé', 'warn'); navigate('salaries');
+  });
+}
+
+/* ═══ RENTABILITÉ ═══ */
+function renderProfitability() {
+  const vehicles = state.cache.vehicles;
+  const cats = state.cache.categories;
+  const personalIds = cats.filter(c => c.group === 'personal').map(c => c.id);
+  $('main').innerHTML = `
+    <div class="page active">
+      <div class="page-header"><div><div class="page-title">📈 Rentabilité</div><div class="page-subtitle">Analyse automatique</div></div></div>
+      <div class="section-card"><h3>🚗 Analyse par véhicule</h3>
+        ${vehicles.length === 0 ? '<div class="table-empty">Aucun véhicule</div>' : `
+        <div class="table-wrap"><table>
+          <thead><tr><th>Véhicule</th><th>Catégorie</th><th>Recettes</th><th>Dépenses</th><th>Bilan</th><th>Km</th><th>Coût/km</th></tr></thead>
+          <tbody>${vehicles.map(v => {
+            const fin = computeVehicleFinancials(v.id);
+            const cat = getCategoryById(v.categoryId);
+            const isPersonal = personalIds.includes(v.categoryId);
+            return `<tr><td><strong>${esc(v.plate)}</strong></td><td>${cat ? esc(cat.name) : '—'}</td>
+              <td>${isPersonal ? '—' : fmtMoney(fin.totalRevenues)}</td><td>${fmtMoney(fin.totalExpenses)}</td>
+              <td style="color:${fin.balance>=0?'#6ee7b7':'#fca5a5'};font-weight:700">${isPersonal ? 'Coût total' : fmtMoney(fin.balance)}</td>
+              <td>${fmtMoney(fin.totalKm)}</td><td>${fin.costPerKm.toFixed(2)}</td></tr>`;
+          }).join('')}</tbody>
+        </table></div>`}
+      </div>
+    </div>`;
+}
+
+/* ═══ DOCUMENTS ═══ */
+function renderDocuments() {
+  const list = state.cache.documents;
+  $('main').innerHTML = `
+    <div class="page active">
+      <div class="page-header"><div><div class="page-title">📄 Documents</div><div class="page-subtitle">${list.length} document(s)</div></div>
+        <div class="page-actions"><button class="btn btn-primary" onclick="openDocumentForm()">+ Nouveau document</button></div></div>
+      ${list.length === 0 ? '<div class="empty-state"><div class="big">📄</div><div class="label">Aucun document</div><button class="btn btn-primary" onclick="openDocumentForm()">+ Ajouter</button></div>' : `
+      <div class="table-wrap"><table><thead><tr><th>Type</th><th>Véhicule</th><th>N°</th><th>Expire</th><th>Statut</th><th></th></tr></thead>
+      <tbody>${list.map(d => {
+        const v = getVehicleById(d.vehicleId);
+        const dl = daysUntil(d.expiryDate);
+        const tag = dl === null ? 'tag-info' : dl < 0 ? 'tag-danger' : dl <= 30 ? 'tag-warn' : 'tag-success';
+        const label = dl === null ? '—' : dl < 0 ? `Expiré (${Math.abs(dl)}j)` : `${dl}j`;
+        return `<tr><td><strong>${esc(d.type||'—')}</strong></td><td>${v ? esc(v.plate) : '—'}</td>
+          <td>${esc(d.number||'—')}</td><td>${fmtDate(d.expiryDate)}</td>
+          <td><span class="tag ${tag}">${label}</span></td>
+          <td class="text-right"><button class="btn btn-danger btn-sm" onclick="deleteDocument(${d.id})">🗑</button></td></tr>`;
+      }).join('')}</tbody></table></div>`}
+    </div>`;
+}
+function openDocumentForm() {
+  openModal('Nouveau document', `
+    <div class="form-grid">
+      <div class="form-field"><label>Véhicule *</label><select id="docf-vehicle"><option value="">—</option>${state.cache.vehicles.map(v => `<option value="${v.id}">${esc(getVehicleLabel(v))}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Type *</label><select id="docf-type">${['assurance','carte-grise','controle-technique','vignette','permis-transport','autre'].map(t => `<option value="${t}">${t}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Numéro</label><input id="docf-number"></div>
+      <div class="form-field"><label>Date délivrance</label><input type="date" id="docf-issue"></div>
+      <div class="form-field"><label>Date expiration</label><input type="date" id="docf-expiry"></div>
+    </div>
+  `, [{ label:'Annuler', class:'btn-secondary', action: closeModal },
+      { label:'Enregistrer', class:'btn-primary', action: async () => {
+        const data = { vehicleId: Number($('docf-vehicle').value), type: $('docf-type').value, number: $('docf-number').value.trim(), issueDate: $('docf-issue').value, expiryDate: $('docf-expiry').value };
+        if (!data.vehicleId) { toast('Véhicule requis', 'error'); return; }
+        await dbAdd('documents', data); closeModal(); toast('Enregistré'); await generateAlerts(); navigate('documents');
+      }}]);
+}
+function deleteDocument(id) {
+  confirmDialog('Supprimer ce document ?', 'Action irréversible.', async () => {
+    await dbDelete('documents', id); toast('Supprimé', 'warn'); await generateAlerts(); navigate('documents');
+  });
+}
+
+/* ═══ INCIDENTS ═══ */
+function renderIncidents() {
+  const list = state.cache.incidents;
+  $('main').innerHTML = `
+    <div class="page active">
+      <div class="page-header"><div><div class="page-title">🚨 Incidents</div><div class="page-subtitle">${list.length} incident(s)</div></div>
+        <div class="page-actions"><button class="btn btn-primary" onclick="openIncidentForm()">+ Nouvel incident</button></div></div>
+      ${list.length === 0 ? '<div class="empty-state"><div class="big">🚨</div><div class="label">Aucun incident</div><button class="btn btn-primary" onclick="openIncidentForm()">+ Ajouter</button></div>' : `
+      <div class="table-wrap"><table><thead><tr><th>Date</th><th>Véhicule</th><th>Type</th><th>Gravité</th><th>Coût</th><th></th></tr></thead>
+      <tbody>${list.slice().reverse().map(i => {
+        const v = getVehicleById(i.vehicleId);
+        return `<tr><td>${fmtDate(i.date)}</td><td>${v ? esc(v.plate) : '—'}</td>
+          <td>${esc(i.type||'—')}</td>
+          <td><span class="tag ${i.severity==='grave'?'tag-danger':i.severity==='moyen'?'tag-warn':'tag-info'}">${esc(i.severity||'—')}</span></td>
+          <td>${fmtMoney(i.cost||0)}</td>
+          <td class="text-right"><button class="btn btn-danger btn-sm" onclick="deleteIncident(${i.id})">🗑</button></td></tr>`;
+      }).join('')}</tbody></table></div>`}
+    </div>`;
+}
+function openIncidentForm() {
+  openModal('Nouvel incident', `
+    <div class="form-grid">
+      <div class="form-field"><label>Véhicule *</label><select id="inf-vehicle"><option value="">—</option>${state.cache.vehicles.map(v => `<option value="${v.id}">${esc(getVehicleLabel(v))}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Date</label><input type="date" id="inf-date" value="${today()}"></div>
+      <div class="form-field"><label>Type</label><select id="inf-type">${['accident','panne','vol','amende','autre'].map(t => `<option value="${t}">${t}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Gravité</label><select id="inf-severity">${['leger','moyen','grave'].map(s => `<option value="${s}">${s}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Coût</label><input type="number" id="inf-cost"></div>
+      <div class="form-field full"><label>Description</label><textarea id="inf-desc"></textarea></div>
+    </div>
+  `, [{ label:'Annuler', class:'btn-secondary', action: closeModal },
+      { label:'Enregistrer', class:'btn-primary', action: async () => {
+        const data = { vehicleId: Number($('inf-vehicle').value), date: $('inf-date').value, type: $('inf-type').value, severity: $('inf-severity').value, cost: Number($('inf-cost').value) || 0, description: $('inf-desc').value.trim() };
+        if (!data.vehicleId) { toast('Véhicule requis', 'error'); return; }
+        await dbAdd('incidents', data);
+        if (data.cost > 0) await dbAdd('expenses', { vehicleId: data.vehicleId, date: data.date, amount: data.cost, category: 'amendes', description: 'Incident ' + data.type });
+        closeModal(); toast('Enregistré'); navigate('incidents');
+      }}]);
+}
+function deleteIncident(id) {
+  confirmDialog('Supprimer cet incident ?', 'Action irréversible.', async () => {
+    await dbDelete('incidents', id); toast('Supprimé', 'warn'); navigate('incidents');
+  });
+}
+
+/* ═══ ALERTES ═══ */
+function renderAlerts() {
+  const list = state.cache.notifications || [];
+  const grouped = { danger:[], warn:[], info:[] };
+  list.forEach(a => { (grouped[a.level] || grouped.info).push(a); });
+  $('main').innerHTML = `
+    <div class="page active">
+      <div class="page-header"><div><div class="page-title">🔔 Centre d'alertes</div><div class="page-subtitle">${list.length} alerte(s)</div></div>
+        <div class="page-actions"><button class="btn btn-secondary" onclick="refreshAlerts()">↻ Actualiser</button></div></div>
+      ${list.length === 0 ? '<div class="empty-state"><div class="big">✅</div><div class="label">Aucune alerte</div></div>' : `
+        ${grouped.danger.length > 0 ? `<div class="section-card"><h3>🔴 Urgentes (${grouped.danger.length})</h3>${grouped.danger.map(renderAlertItem).join('')}</div>` : ''}
+        ${grouped.warn.length > 0 ? `<div class="section-card"><h3>🟠 Attention (${grouped.warn.length})</h3>${grouped.warn.map(renderAlertItem).join('')}</div>` : ''}
+        ${grouped.info.length > 0 ? `<div class="section-card"><h3>🟢 Infos (${grouped.info.length})</h3>${grouped.info.map(renderAlertItem).join('')}</div>` : ''}
+      `}
+    </div>`;
+}
+function renderAlertItem(a) {
+  return `<div class="alert-item ${a.level}">
+    <div class="alert-icon">${a.level==='danger'?'🔴':a.level==='warn'?'🟠':'🟢'}</div>
+    <div class="alert-content"><div class="alert-title">${esc(a.title)}</div><div class="alert-desc">${esc(a.desc)}</div></div>
+  </div>`;
+}
+async function refreshAlerts() {
+  await refreshCache(); await generateAlerts(); await refreshCache();
+  toast('Actualisées'); renderAlerts();
+}
+
+/* ═══ RAPPORTS ═══ */
+function renderReports() {
+  $('main').innerHTML = `
+    <div class="page active">
+      <div class="page-header"><div><div class="page-title">📊 Rapports</div><div class="page-subtitle">Rapports automatiques</div></div>
+        <div class="page-actions">
+          <button class="btn btn-secondary" onclick="exportAllCSV()">⬇ Export CSV</button>
+          <button class="btn btn-primary" onclick="window.print()">🖨 Imprimer / PDF</button>
+        </div></div>
+      <div class="section-card"><h3>📅 Filtre période</h3>
+        <div class="filters">
+          <div class="form-field"><label>Du</label><input type="date" id="rp-from"></div>
+          <div class="form-field"><label>Au</label><input type="date" id="rp-to"></div>
+          <button class="btn btn-primary" onclick="applyReportFilter()">Appliquer</button>
+        </div>
+      </div>
+      <div id="report-content"></div>
+    </div>`;
+  applyReportFilter();
+}
+function applyReportFilter() {
+  const from = $('rp-from')?.value, to = $('rp-to')?.value;
+  const inRange = (d) => { if (!d) return true; if (from && d < from) return false; if (to && d > to) return false; return true; };
+  const vehicles = state.cache.vehicles;
+  const totalRev = state.cache.revenues.filter(r => inRange(r.date)).reduce((s,r) => s+Number(r.amount||0),0);
+  const totalExp = state.cache.expenses.filter(e => inRange(e.date)).reduce((s,e) => s+Number(e.amount||0),0);
+  const el = $('report-content'); if (!el) return;
+  el.innerHTML = `
+    <div class="section-card"><h3>📈 Synthèse</h3>
+      <div class="cards-grid">
+        <div class="stat-card"><div class="stat-label">Véhicules</div><div class="stat-value">${vehicles.length}</div></div>
+        <div class="stat-card success"><div class="stat-label">Recettes</div><div class="stat-value">${fmtMoney(totalRev)}</div></div>
+        <div class="stat-card danger"><div class="stat-label">Dépenses</div><div class="stat-value">${fmtMoney(totalExp)}</div></div>
+        <div class="stat-card ${totalRev-totalExp>=0?'success':'danger'}"><div class="stat-label">Bilan</div><div class="stat-value">${fmtMoney(Math.abs(totalRev-totalExp))}</div></div>
+      </div>
+    </div>`;
+}
+function exportAllCSV() {
+  const rows = [['Type','ID','Info','Montant','Date']];
+  state.cache.missions.forEach(m => rows.push(['Mission', m.id, `${m.origin} → ${m.destination}`, m.revenue||0, m.date]));
+  state.cache.fuel.forEach(f => rows.push(['Carburant', f.id, `${f.liters}L`, f.totalCost||0, f.date]));
+  state.cache.maintenance.forEach(m => rows.push(['Entretien', m.id, m.type, m.cost||0, m.date]));
+  state.cache.expenses.forEach(e => rows.push(['Dépense', e.id, e.description, e.amount||0, e.date]));
+  state.cache.revenues.forEach(r => rows.push(['Recette', r.id, r.source, r.amount||0, r.date]));
+  const csv = rows.map(r => r.map(x => `"${String(x||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\ufeff' + csv], { type:'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `rapport_vehicules_${today()}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('Export téléchargé');
+}
+
+/* ═══ MODAL ═══ */
+function openModal(title, bodyHTML, buttons, size) {
+  $('modal-title').textContent = title;
+  $('modal-body').innerHTML = bodyHTML;
+  const footer = $('modal-footer');
+  footer.innerHTML = '';
+  (buttons || []).forEach(b => {
+    const btn = document.createElement('button');
+    btn.className = 'btn ' + (b.class || 'btn-secondary');
+    btn.textContent = b.label;
+    btn.onclick = b.action;
+    footer.appendChild(btn);
+  });
+  $('modal').style.maxWidth = size === 'large' ? '900px' : '720px';
+  $('modal-overlay').classList.add('visible');
+}
+function closeModal() { $('modal-overlay').classList.remove('visible'); }
+
+/* ═══ DÉMO ═══ */
+async function loadDemoData() {
+  if (!confirm('Charger les données de démonstration ?')) return;
+  const existing = await dbGetAll('vehicles');
+  if (existing.length > 0 && !confirm('Des véhicules existent. Ajouter quand même ?')) return;
+
+  const cats = [
+    { name:'Voiture personnelle', group:'personal', description:'Usage personnel' },
+    { name:'Véhicule familial', group:'personal', description:'Usage familial' },
+    { name:'Taxi', group:'transport', description:'Transport personnes' },
+    { name:'Camion', group:'transport', description:'Transport marchandises' },
+    { name:'Minibus', group:'transport', description:'Transport groupe' },
+    { name:'Véhicule administratif', group:'other', description:'Administration' }
+  ];
+  const catIds = {};
+  for (const c of cats) catIds[c.name] = await dbAdd('categories', c);
+
+  const owners = [{ name:'Personnel' }, { name:'Sté TransLog SARL' }, { name:'Mairie' }];
+  const ownerIds = [];
+  for (const o of owners) ownerIds.push(await dbAdd('owners', o));
+
+  const vehiclesData = [
+    { plate:'AB-123-CD', brand:'Toyota', model:'Corolla', year:2020, categoryId:catIds['Voiture personnelle'], fuelType:'essence', mileage:45000, status:'disponible', ownerId:ownerIds[0], acquisitionDate:'2020-03-15', acquisitionPrice:18000 },
+    { plate:'EF-456-GH', brand:'Renault', model:'Clio', year:2019, categoryId:catIds['Véhicule familial'], fuelType:'diesel', mileage:62000, status:'disponible', ownerId:ownerIds[0], acquisitionDate:'2019-06-20', acquisitionPrice:15000 },
+    { plate:'IJ-789-KL', brand:'Toyota', model:'Hiace', year:2021, categoryId:catIds['Taxi'], fuelType:'diesel', mileage:120000, status:'en-circulation', ownerId:ownerIds[1], acquisitionDate:'2021-01-10', acquisitionPrice:32000 },
+    { plate:'MN-012-OP', brand:'Mercedes', model:'Sprinter', year:2020, categoryId:catIds['Camion'], fuelType:'diesel', mileage:85000, status:'disponible', ownerId:ownerIds[1], acquisitionDate:'2020-05-05', acquisitionPrice:45000 },
+    { plate:'QR-345-ST', brand:'Ford', model:'Transit', year:2022, categoryId:catIds['Minibus'], fuelType:'diesel', mileage:40000, status:'disponible', ownerId:ownerIds[1], acquisitionDate:'2022-02-15', acquisitionPrice:38000 },
+    { plate:'UV-678-WX', brand:'Peugeot', model:'Partner', year:2018, categoryId:catIds['Véhicule administratif'], fuelType:'diesel', mileage:95000, status:'au-garage', ownerId:ownerIds[2], acquisitionDate:'2018-09-01', acquisitionPrice:22000 }
+  ];
+  const vehicleIds = [];
+  for (const v of vehiclesData) vehicleIds.push(await dbAdd('vehicles', v));
+
+  const driversData = [
+    { name:'Ahmed Benali', phone:'0612345678', licenseNumber:'PER-001', licenseCategory:'B', licenseExpiry:'2026-05-15', hireDate:'2020-06-01', salary:2500, status:'actif', vehicleId:vehicleIds[2] },
+    { name:'Marc Dubois', phone:'0698765432', licenseNumber:'PER-002', licenseCategory:'C', licenseExpiry:'2025-12-01', hireDate:'2019-03-15', salary:2800, status:'actif', vehicleId:vehicleIds[3] },
+    { name:'Sofia Martin', phone:'0655443322', licenseNumber:'PER-003', licenseCategory:'B', licenseExpiry:'2027-08-20', hireDate:'2021-09-10', salary:2600, status:'actif', vehicleId:vehicleIds[4] }
+  ];
+  const driverIds = [];
+  for (const d of driversData) driverIds.push(await dbAdd('drivers', d));
+
+  const missions = [
+    { vehicleId:vehicleIds[2], driverId:driverIds[0], origin:'Paris', destination:'Lyon', date:'2025-09-15', startMileage:118000, endMileage:118500, distance:500, revenue:450, expenses:80, status:'terminee' },
+    { vehicleId:vehicleIds[3], driverId:driverIds[1], origin:'Paris', destination:'Bordeaux', date:'2025-10-01', startMileage:84000, endMileage:84600, distance:600, revenue:800, expenses:150, status:'terminee' },
+    { vehicleId:vehicleIds[4], driverId:driverIds[2], origin:'Paris', destination:'Reims', date:'2025-10-15', startMileage:39500, endMileage:39700, distance:200, revenue:320, expenses:50, status:'en-cours' }
+  ];
+  for (const m of missions) await dbAdd('missions', m);
+
+  const fuels = [
+    { vehicleId:vehicleIds[0], date:'2025-10-01', station:'Total', liters:40, pricePerLiter:1.75, totalCost:70, mileage:44800 },
+    { vehicleId:vehicleIds[2], date:'2025-10-05', station:'Total', liters:60, pricePerLiter:1.65, totalCost:99, mileage:118800 },
+    { vehicleId:vehicleIds[3], date:'2025-10-02', station:'Esso', liters:85, pricePerLiter:1.62, totalCost:137.7, mileage:84300 },
+    { vehicleId:vehicleIds[4], date:'2025-10-10', station:'Shell', liters:65, pricePerLiter:1.70, totalCost:110.5, mileage:39650 }
+  ];
+  for (const f of fuels) {
+    await dbAdd('fuel', f);
+    await dbAdd('expenses', { vehicleId:f.vehicleId, date:f.date, amount:f.totalCost, category:'carburant', description:'Plein ' + f.liters + 'L' });
+  }
+
+  const maints = [
+    { vehicleId:vehicleIds[0], date:'2025-08-15', type:'vidange', cost:120, garage:'AutoPro', nextDate:'2026-02-15', nextKm:49000 },
+    { vehicleId:vehicleIds[2], date:'2025-09-10', type:'freins', cost:450, garage:'Speedy', nextDate:'2026-09-10' }
+  ];
+  for (const m of maints) {
+    await dbAdd('maintenance', m);
+    await dbAdd('expenses', { vehicleId:m.vehicleId, date:m.date, amount:m.cost, category:'entretien', description:'Entretien ' + m.type });
+  }
+
+  const revenues = [
+    { vehicleId:vehicleIds[2], date:'2025-09-15', amount:450, source:'mission' },
+    { vehicleId:vehicleIds[3], date:'2025-10-01', amount:800, source:'mission' }
+  ];
+  for (const r of revenues) await dbAdd('revenues', r);
+
+  const docs = [
+    { vehicleId:vehicleIds[0], type:'assurance', number:'ASS-001', issueDate:'2024-11-01', expiryDate:'2025-12-01' },
+    { vehicleId:vehicleIds[2], type:'assurance', number:'ASS-002', issueDate:'2024-12-01', expiryDate:'2025-11-10' },
+    { vehicleId:vehicleIds[3], type:'controle-technique', number:'CT-003', issueDate:'2024-06-15', expiryDate:'2025-11-20' }
+  ];
+  for (const d of docs) await dbAdd('documents', d);
+
+  toast('Données de démo chargées ✓');
+  await generateAlerts(); await refreshCache();
+  navigate('dashboard');
+}
+
+/* ═══ INIT ═══ */
+async function init() {
+  try {
+    await openDB();
+    const existingCats = await dbGetAll('categories');
+    if (existingCats.length === 0) {
+      const defaults = [
+        { name:'Voiture personnelle', group:'personal', description:'Usage personnel' },
+        { name:'Véhicule familial', group:'personal', description:'Usage familial' },
+        { name:'Véhicule de service', group:'personal', description:'Service personnel' },
+        { name:'Taxi', group:'transport', description:'Transport de personnes' },
+        { name:'Bus', group:'transport', description:'Transport en commun' },
+        { name:'Minibus', group:'transport', description:'Transport de groupe' },
+        { name:'Camion', group:'transport', description:'Transport marchandises' },
+        { name:'Camionnette', group:'transport', description:'Livraison légère' },
+        { name:'Véhicule administratif', group:'other', description:'Administration' },
+        { name:'Véhicule de société', group:'other', description:'Flotte entreprise' },
+        { name:'Véhicule de location', group:'other', description:'Location' },
+        { name:'Véhicule spécial', group:'other', description:'Usage spécial' }
+      ];
+      for (const c of defaults) await dbAdd('categories', c);
+    }
+    const owners = await dbGetAll('owners');
+    if (owners.length === 0) {
+      await dbAdd('owners', { name:'Personnel', type:'personnel' });
+      await dbAdd('owners', { name:'Entreprise', type:'entreprise' });
+    }
+    document.querySelectorAll('.nav-item').forEach(el => el.addEventListener('click', () => navigate(el.dataset.page)));
+    $('menu-toggle').addEventListener('click', () => $('sidebar').classList.toggle('open'));
+    $('btn-demo').addEventListener('click', loadDemoData);
+    $('btn-logout').addEventListener('click', logout);
+    $('login-btn').addEventListener('click', login);
+    $('login-phone').addEventListener('keydown', e => { if (e.key === 'Enter') $('login-pin').focus(); });
+    $('login-pin').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+    $('login-pin').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, ''); });
+    $('footer-year').textContent = new Date().getFullYear();
+    $('modal-overlay').addEventListener('click', e => { if (e.target === $('modal-overlay')) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    const authenticated = await checkAuth();
+    if (authenticated) { await startApp(); }
+    else { $('login-screen').classList.remove('hidden'); }
+    console.log('[Gestion de Véhicules] Prête — IR GIDE PROMAX');
+  } catch (e) { console.error('Erreur init:', e); alert('Erreur: ' + e.message); }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
